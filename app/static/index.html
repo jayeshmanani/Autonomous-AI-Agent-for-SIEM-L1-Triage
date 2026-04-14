@@ -36,6 +36,11 @@
 
         <section class="audit-box">
           <h3>Baseline Audit (initial vs triage)</h3>
+          <div class="audit-controls">
+            <label for="audit-limit">Records to show</label>
+            <input id="audit-limit" type="number" min="1" max="1000" value="50" />
+            <button id="btn-audit-refresh" type="button">Refresh</button>
+          </div>
           <p id="audit-stats" class="audit-stats">No audit loaded yet.</p>
           <div id="audit-list" class="audit-list"></div>
         </section>

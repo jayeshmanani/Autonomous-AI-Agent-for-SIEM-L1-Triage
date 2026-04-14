@@ -214,8 +214,11 @@ def triage_cases_by_origin(origin: str, limit: int = 100) -> dict[str, Any]:
         return {
             "origin": origin,
             "matched": 0,
+            "eligible_new": 0,
+            "already_processed": 0,
             "processed": 0,
             "escalated": 0,
+            "remaining_new": 0,
             "updated_event_ids": [],
             "results": [],
         }
@@ -237,7 +240,15 @@ def triage_cases_by_origin(origin: str, limit: int = 100) -> dict[str, Any]:
         return normalized_origin in haystack
 
     matched_indices = [index for index, case in enumerate(cases) if _matches(case)]
-    selected_indices = matched_indices[:safe_limit]
+
+    def _is_unprocessed(case: dict[str, Any]) -> bool:
+        status = str(case.get("status", "new")).lower()
+        classification = str(case.get("classification", "unknown")).lower()
+        return status == "new" and classification == "unknown" and not case.get("updated_at")
+
+    eligible_indices = [index for index in matched_indices if _is_unprocessed(cases[index])]
+    selected_indices = eligible_indices[:safe_limit]
+    already_processed = len(matched_indices) - len(eligible_indices)
 
     updated_event_ids: list[str] = []
     results: list[dict[str, Any]] = []
@@ -275,8 +286,11 @@ def triage_cases_by_origin(origin: str, limit: int = 100) -> dict[str, Any]:
     return {
         "origin": origin,
         "matched": len(matched_indices),
+        "eligible_new": len(eligible_indices),
+        "already_processed": already_processed,
         "processed": len(results),
         "escalated": escalated_count,
+        "remaining_new": max(0, len(eligible_indices) - len(selected_indices)),
         "updated_event_ids": updated_event_ids,
         "results": results,
     }
