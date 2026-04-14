@@ -1,0 +1,147 @@
+"""FastAPI entrypoint for autonomous SIEM L1 triage agent."""
+
+from __future__ import annotations
+
+import os
+from functools import lru_cache
+from pathlib import Path
+from typing import Any
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+
+from .services.ai_service import analyze_event, answer_question, summarize_events
+from .services.threat_intel import get_ip_reputation
+from .utils.log_parser import load_events, normalize_event
+
+app = FastAPI(title="Autonomous AI Agent for SIEM L1 Triage", version="1.0.0")
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_DATASET = PROJECT_ROOT / "data" / "sample_logs.json"
+
+MAX_DATASET_RECORDS = int(os.getenv("MAX_DATASET_RECORDS", "25000"))
+MAX_BATCH_SIZE = int(os.getenv("MAX_BATCH_SIZE", "200"))
+
+TRIAGE_HISTORY: list[dict[str, Any]] = []
+
+
+class TriageRequest(BaseModel):
+    raw_log: str | None = None
+    event: dict[str, Any] | None = None
+    enrich_threat_intel: bool = True
+
+
+class BatchTriageRequest(BaseModel):
+    events: list[dict[str, Any] | str] = Field(default_factory=list)
+    enrich_threat_intel: bool = True
+
+
+class ChatRequest(BaseModel):
+    question: str
+
+
+class TagRequest(BaseModel):
+    raw_log: str | None = None
+    event: dict[str, Any] | None = None
+    abuse_score: int = 0
+
+
+@lru_cache(maxsize=1)
+def get_dataset() -> list[dict[str, Any]]:
+    dataset_path = Path(os.getenv("SIEM_DATASET_PATH", str(DEFAULT_DATASET)))
+    return load_events(dataset_path, max_records=MAX_DATASET_RECORDS)
+
+
+def _triage_single(payload: dict[str, Any] | str, enrich_threat_intel: bool = True) -> dict[str, Any]:
+    event = normalize_event(payload)
+    src_ip = event.get("src_ip")
+    abuse_score = get_ip_reputation(src_ip) if enrich_threat_intel else 0
+    analysis = analyze_event(event, abuse_score=abuse_score)
+
+    result = {
+        "event_id": event.get("event_id"),
+        "event": event,
+        "extracted_ip": src_ip,
+        "analysis": analysis,
+    }
+    TRIAGE_HISTORY.append(result)
+    if len(TRIAGE_HISTORY) > 5000:
+        del TRIAGE_HISTORY[:1000]
+    return result
+
+
+@app.get("/health")
+async def health() -> dict[str, Any]:
+    events = get_dataset()
+    return {
+        "status": "ok",
+        "dataset_loaded": len(events),
+        "max_dataset_records": MAX_DATASET_RECORDS,
+        "triage_history_size": len(TRIAGE_HISTORY),
+    }
+
+
+@app.post("/triage")
+async def triage_log(item: TriageRequest) -> dict[str, Any]:
+    payload = item.event if item.event is not None else item.raw_log
+    if payload is None:
+        raise HTTPException(status_code=400, detail="Provide either 'raw_log' or 'event'.")
+    return _triage_single(payload, enrich_threat_intel=item.enrich_threat_intel)
+
+
+@app.post("/triage/batch")
+async def triage_batch(request: BatchTriageRequest) -> dict[str, Any]:
+    if not request.events:
+        raise HTTPException(status_code=400, detail="'events' must contain at least one item.")
+    if len(request.events) > MAX_BATCH_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Batch too large. Max allowed is {MAX_BATCH_SIZE}.",
+        )
+
+    results = [_triage_single(item, enrich_threat_intel=request.enrich_threat_intel) for item in request.events]
+    escalated = sum(1 for item in results if item.get("analysis", {}).get("escalation", {}).get("required"))
+    return {
+        "processed": len(results),
+        "escalated": escalated,
+        "results": results,
+    }
+
+
+@app.post("/tag")
+async def tag_event(request: TagRequest) -> dict[str, Any]:
+    payload = request.event if request.event is not None else request.raw_log
+    if payload is None:
+        raise HTTPException(status_code=400, detail="Provide either 'raw_log' or 'event'.")
+
+    event = normalize_event(payload)
+    analysis = analyze_event(event, abuse_score=max(0, min(100, request.abuse_score)))
+    return {
+        "event": event,
+        "tags": analysis["tags"],
+        "classification": analysis["classification"],
+        "priority": analysis["priority"],
+    }
+
+
+@app.get("/analysis/summary")
+async def analysis_summary() -> dict[str, Any]:
+    events = get_dataset()
+    summary = summarize_events(events)
+    summary["triage_history_size"] = len(TRIAGE_HISTORY)
+    summary["escalated_in_history"] = sum(
+        1
+        for item in TRIAGE_HISTORY
+        if item.get("analysis", {}).get("escalation", {}).get("required")
+    )
+    return summary
+
+
+@app.post("/chat")
+async def chat(request: ChatRequest) -> dict[str, Any]:
+    events = get_dataset()
+    answer = answer_question(request.question, events, triage_history=TRIAGE_HISTORY)
+    return {
+        "question": request.question,
+        "response": answer,
+    }
