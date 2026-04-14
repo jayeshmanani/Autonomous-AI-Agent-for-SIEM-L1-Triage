@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from .routers.assistant import router as assistant_router
 from .services.ai_service import analyze_event, answer_question, summarize_events
+from .services.database import triage_cases_by_origin
 from .services.threat_intel import get_ip_reputation
 from .utils.log_parser import load_events, normalize_event
 
@@ -126,45 +127,9 @@ async def triage_batch(request: BatchTriageRequest) -> dict[str, Any]:
 
 @app.post("/triage/by-origin/{origin}")
 async def triage_by_origin(origin: str, limit: int = 100, enrich_threat_intel: bool = False) -> dict[str, Any]:
-    normalized_origin = origin.strip().lower()
-    if not normalized_origin:
-        raise HTTPException(status_code=400, detail="Origin cannot be empty.")
-
-    safe_limit = max(1, min(limit, MAX_BATCH_SIZE))
-    events = get_dataset()
-
-    matched = [
-        event
-        for event in events
-        if (
-            normalized_origin in str(event.get("event_type", "")).lower()
-            or normalized_origin in str(event.get("source", "")).lower()
-            or normalized_origin in str(event.get("src_ip", "")).lower()
-            or normalized_origin in str(event.get("dst_ip", "")).lower()
-            or normalized_origin in str(event.get("geo_location", "")).lower()
-        )
-    ]
-
-    if not matched:
-        return {
-            "origin": origin,
-            "matched": 0,
-            "processed": 0,
-            "escalated": 0,
-            "results": [],
-        }
-
-    selected = matched[:safe_limit]
-    results = [_triage_single(event, enrich_threat_intel=enrich_threat_intel) for event in selected]
-    escalated = sum(1 for item in results if item.get("analysis", {}).get("escalation", {}).get("required"))
-
-    return {
-        "origin": origin,
-        "matched": len(matched),
-        "processed": len(results),
-        "escalated": escalated,
-        "results": results,
-    }
+    # enrich_threat_intel is currently ignored for DB-origin triage updates.
+    _ = enrich_threat_intel
+    return triage_cases_by_origin(origin=origin, limit=min(limit, MAX_BATCH_SIZE))
 
 
 @app.post("/tag")
