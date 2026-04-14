@@ -1,0 +1,143 @@
+:root {
+  --bg: #f2efe8;
+  --ink: #1f2a32;
+  --card: #fffdf8;
+  --accent: #0a7b83;
+  --accent-2: #f5b700;
+  --line: #d8d0c2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: radial-gradient(circle at 15% 10%, #fff4d6 0%, var(--bg) 35%),
+    linear-gradient(130deg, #f2efe8 0%, #e8f3f4 100%);
+}
+
+.shell {
+  width: min(1200px, 94vw);
+  margin: 22px auto;
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 16px;
+}
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.07);
+}
+
+.panel-header {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-header h1,
+.panel-header h2 {
+  margin: 0;
+  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+}
+
+.panel-header p {
+  margin: 6px 0 0;
+  color: #4f616b;
+}
+
+.chat-window {
+  height: 58vh;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.msg {
+  padding: 10px 12px;
+  border-radius: 12px;
+  max-width: 92%;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.msg.user {
+  align-self: flex-end;
+  background: #d9f5f7;
+  border: 1px solid #9fdcdf;
+}
+
+.msg.agent {
+  align-self: flex-start;
+  background: #fff7df;
+  border: 1px solid #f5dd96;
+}
+
+.chat-form {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.chat-form input,
+.task-form input,
+.task-form textarea {
+  width: 100%;
+  border: 1px solid #b8c0c4;
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.chat-form button,
+.task-btn,
+.task-form button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+}
+
+.task-btn {
+  background: #184e77;
+}
+
+.task-grid {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.task-form {
+  padding: 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inline-row {
+  display: grid;
+  grid-template-columns: 1fr 88px auto;
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-window {
+    height: 42vh;
+  }
+}
