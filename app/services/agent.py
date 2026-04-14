@@ -135,6 +135,7 @@ def _local_assistant_response(prompt: str) -> AssistantResponse:
         )
         return AssistantResponse(
             message=message,
+            reasoning=recommendations,
             top_threat_identified=top_threat,
             escalation_actions_queued=queued_actions or None,
         )
@@ -148,6 +149,11 @@ def _local_assistant_response(prompt: str) -> AssistantResponse:
         )
         return AssistantResponse(
             message=message,
+            reasoning=[
+                "Summary is computed from JSON triage database state.",
+                "Status and classification distributions are derived directly from stored cases.",
+                "Top threat is selected from escalated/severity/risk-ranked cases.",
+            ],
             top_threat_identified=top_threat,
             escalation_actions_queued=queued_actions or None,
         )
@@ -158,6 +164,10 @@ def _local_assistant_response(prompt: str) -> AssistantResponse:
         message = f"Top origins/event types by volume: {top_event_types}."
         return AssistantResponse(
             message=message,
+            reasoning=[
+                "Event type counts are aggregated over all current triage records.",
+                "Top 3 origins are ranked by frequency.",
+            ],
             top_threat_identified=top_threat,
             escalation_actions_queued=queued_actions or None,
         )
@@ -168,6 +178,10 @@ def _local_assistant_response(prompt: str) -> AssistantResponse:
             f"We currently have {total} cases and {escalated} escalated. "
             "You can ask for escalation priorities, dataset summary, or origin-based trends."
         ),
+        reasoning=[
+            "Response was generated from deterministic local SOC logic.",
+            "Totals are from current JSON triage database state.",
+        ],
         top_threat_identified=top_threat,
         escalation_actions_queued=queued_actions or None,
     )
@@ -197,6 +211,10 @@ def _handle_deterministic_action(prompt: str) -> AssistantResponse | None:
                 f"classified_non_unknown={audit['classified_non_unknown']}, "
                 f"status_not_new={audit['status_not_new']}, updated_at_count={audit['updated_at_count']}."
             ),
+            reasoning=[
+                "Compared current working DB to baseline seed by event_id.",
+                "Counts reflect differences in tracked triage fields only.",
+            ],
             top_threat_identified=None,
             escalation_actions_queued=None,
         )
@@ -210,6 +228,7 @@ def _handle_deterministic_action(prompt: str) -> AssistantResponse | None:
         if case is None:
             return AssistantResponse(
                 message=f"No case found for event_id={event_id}.",
+                reasoning=["The provided event_id does not exist in the triage database."],
                 top_threat_identified=None,
                 escalation_actions_queued=None,
             )
@@ -224,12 +243,17 @@ def _handle_deterministic_action(prompt: str) -> AssistantResponse | None:
             if bool(case.get("escalated"))
             else None
         )
+        case_reasoning = case.get("triage_reasoning") if isinstance(case.get("triage_reasoning"), list) else []
         return AssistantResponse(
             message=(
                 f"Case {event_id} updated: classification={case.get('classification')}, "
                 f"priority={case.get('priority')}, risk_score={case.get('risk_score')}, "
                 f"status={case.get('status')}."
             ),
+            reasoning=case_reasoning[:5] or [
+                "Case was re-classified using triage scoring and tagging logic.",
+                f"Escalation flag is {'set' if bool(case.get('escalated')) else 'not set'} after re-triage.",
+            ],
             top_threat_identified=event_id,
             escalation_actions_queued=queued,
         )
@@ -239,6 +263,7 @@ def _handle_deterministic_action(prompt: str) -> AssistantResponse | None:
         if case is None:
             return AssistantResponse(
                 message=f"No case found for event_id={event_id}.",
+                reasoning=["The provided event_id does not exist in the triage database."],
                 top_threat_identified=None,
                 escalation_actions_queued=None,
             )
@@ -248,6 +273,10 @@ def _handle_deterministic_action(prompt: str) -> AssistantResponse | None:
                 f"Case {event_id} escalated successfully to "
                 f"{case.get('escalation_target') or 'L2-IR'}."
             ),
+            reasoning=[
+                "Escalation action updated status and target queue in persistent DB.",
+                "updated_at timestamp was refreshed for audit tracking.",
+            ],
             top_threat_identified=event_id,
             escalation_actions_queued=[
                 EscalationAction(
@@ -285,7 +314,9 @@ siem_agent = Agent(
         "1) Use fetch_triage_summary or fetch_triage_data before broad claims. "
         "2) For event-level tasks use lookup_case then classify_and_tag if needed. "
         "3) Escalate when severity is critical/emergency, classification is malicious, or risk_score >= 80. "
-        "4) Explain reasoning clearly and keep analyst responses concise and actionable."
+        "4) Always populate the reasoning field with 2-5 concrete bullets tied to fields/metrics you used. "
+        "5) In message, include a brief conclusion and next action. Keep responses concise and actionable. "
+        "6) Never fabricate evidence; if data is missing, explicitly say so in reasoning."
     ),
 )
 

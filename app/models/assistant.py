@@ -8,6 +8,10 @@ class EscalationAction(BaseModel):
 
 class AssistantResponse(BaseModel):
     message: str = Field(description="Conversational response to the SOC analyst.")
+    reasoning: list[str] | None = Field(
+        default=None,
+        description="Short bullet-point reasoning explaining why the assistant reached this response.",
+    )
     top_threat_identified: str | None = Field(
         default=None,
         description="Most important threat/event identified from the current context.",

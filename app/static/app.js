@@ -32,6 +32,65 @@ function appendMessage(role, text) {
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
+function _percent(count, total) {
+  if (!total) return "0.0%";
+  return `${((Number(count || 0) / total) * 100).toFixed(1)}%`;
+}
+
+function formatDatasetSummary(data) {
+  const total = Number(data.total_events || 0);
+  const avgRisk = Number(data.average_metadata_risk || 0);
+  const severity = data.severity_distribution || {};
+  const eventTypes = data.event_type_distribution || {};
+  const topSources = Array.isArray(data.top_sources) ? data.top_sources : [];
+
+  const sevEntries = Object.entries(severity).sort((a, b) => Number(b[1]) - Number(a[1]));
+  const eventEntries = Object.entries(eventTypes).sort((a, b) => Number(b[1]) - Number(a[1]));
+
+  const highCriticalEmergency = Number(severity.high || 0) + Number(severity.critical || 0) + Number(severity.emergency || 0);
+  const highRiskShare = _percent(highCriticalEmergency, total);
+
+  const sevLines = sevEntries
+    .map(([name, count]) => `${name}: ${count} (${_percent(Number(count), total)})`)
+    .join("\n");
+
+  const eventLines = eventEntries
+    .slice(0, 5)
+    .map(([name, count]) => `${name}: ${count} (${_percent(Number(count), total)})`)
+    .join("\n");
+
+  const sourceLines = topSources
+    .slice(0, 5)
+    .map((item, index) => `${index + 1}. ${item[0]}: ${item[1]}`)
+    .join("\n");
+
+  let riskBand = "normal";
+  if (avgRisk >= 70) riskBand = "high";
+  else if (avgRisk >= 50) riskBand = "elevated";
+
+  return [
+    "Dataset Summary",
+    "",
+    `Total events analyzed: ${total}`,
+    `Average metadata risk score: ${avgRisk.toFixed(2)} (${riskBand})`,
+    `High+Critical+Emergency share: ${highCriticalEmergency} (${highRiskShare})`,
+    "",
+    "Severity breakdown:",
+    sevLines || "No severity data available.",
+    "",
+    "Top event types:",
+    eventLines || "No event type data available.",
+    "",
+    "Top sources:",
+    sourceLines || "No source data available.",
+    "",
+    "What this means:",
+    "- Prioritize High/Critical/Emergency queue first.",
+    "- Focus tuning on the top event types and top log sources.",
+    "- Use origin-based triage on the busiest source/event type to reduce backlog faster.",
+  ].join("\n");
+}
+
 async function initializeSession() {
   try {
     const resp = await fetch(`/assistant/welcome/${sessionId}`);
@@ -51,7 +110,20 @@ async function askAssistant(prompt) {
       body: JSON.stringify({ session_id: sessionId, prompt }),
     });
     const data = await resp.json();
-    appendMessage("agent", data.message || "No response.");
+    let text = data.message || "No response.";
+    if (Array.isArray(data.reasoning) && data.reasoning.length > 0) {
+      text += `\n\nReasoning:\n- ${data.reasoning.join("\n- ")}`;
+    }
+    if (data.top_threat_identified) {
+      text += `\n\nTop threat: ${data.top_threat_identified}`;
+    }
+    if (Array.isArray(data.escalation_actions_queued) && data.escalation_actions_queued.length > 0) {
+      const actions = data.escalation_actions_queued
+        .map((item) => `${item.event_id}: ${item.action}`)
+        .join("\n");
+      text += `\n\nQueued actions:\n${actions}`;
+    }
+    appendMessage("agent", text);
     await loadAudit();
   } catch {
     appendMessage("agent", "Assistant request failed.");
@@ -118,7 +190,7 @@ btnSummary.addEventListener("click", async () => {
   try {
     const resp = await fetch("/analysis/summary");
     const data = await resp.json();
-    appendMessage("agent", `Summary:\n${JSON.stringify(data, null, 2)}`);
+    appendMessage("agent", formatDatasetSummary(data));
     await loadAudit();
   } catch {
     appendMessage("agent", "Could not fetch summary.");
@@ -150,7 +222,14 @@ triageOriginForm.addEventListener("submit", async (e) => {
       method: "POST",
     });
     const data = await resp.json();
-      const report = `Triage by origin result:\nMatched: ${data.matched}\nEligible New: ${data.eligible_new}\nAlready Processed: ${data.already_processed}\nProcessed Now: ${data.processed}\nEscalated: ${data.escalated}\nRemaining New: ${data.remaining_new}`;
+    const examples = Array.isArray(data.results) ? data.results.slice(0, 2) : [];
+    const reasonLines = examples
+      .map((item) => {
+        const topReason = Array.isArray(item.reasoning) && item.reasoning.length > 0 ? item.reasoning[0] : "No reasoning available.";
+        return `${item.event_id}: ${topReason}`;
+      })
+      .join("\n");
+    const report = `Triage by origin result:\nMatched: ${data.matched}\nEligible New: ${data.eligible_new}\nAlready Processed: ${data.already_processed}\nProcessed Now: ${data.processed}\nEscalated: ${data.escalated}\nRemaining New: ${data.remaining_new}${reasonLines ? `\n\nSample reasoning:\n${reasonLines}` : ""}`;
     appendMessage("agent", report);
     await loadAudit();
   } catch {
@@ -173,9 +252,11 @@ singleTriageForm.addEventListener("submit", async (e) => {
     });
     const data = await resp.json();
     const analysis = data.analysis || {};
+    const reasons = Array.isArray(analysis.decision_reasoning) ? analysis.decision_reasoning : [];
+    const fieldsUsed = Array.isArray(analysis.decision_fields_used) ? analysis.decision_fields_used : [];
     appendMessage(
       "agent",
-      `Classification: ${analysis.classification}\nPriority: ${analysis.priority}\nRisk Score: ${analysis.risk_score}`,
+      `Classification: ${analysis.classification}\nPriority: ${analysis.priority}\nRisk Score: ${analysis.risk_score}\nSummary: ${analysis.summary || "n/a"}${reasons.length ? `\n\nReasoning:\n- ${reasons.join("\n- ")}` : ""}${fieldsUsed.length ? `\n\nFields used: ${fieldsUsed.join(", ")}` : ""}`,
     );
     await loadAudit();
   } catch {
