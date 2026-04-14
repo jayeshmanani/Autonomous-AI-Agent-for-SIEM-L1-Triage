@@ -192,3 +192,38 @@ Open docs at:
 - Threat-intel lookup is cached to reduce repeated API calls for the same IP.
 - If no AbuseIPDB key is set, triage still works using internal scoring rules.
 
+## Live SIEM Assistant (PydanticAI)
+
+The project now includes a structured, session-aware assistant integrated with the SIEM triage database.
+
+New modules:
+
+- `app/models/assistant.py` for structured assistant output schema.
+- `app/services/database.py` for JSON-backed triage case persistence and updates.
+- `app/services/agent.py` for PydanticAI agent setup, tools, and fallback behavior.
+- `app/routers/assistant.py` for assistant chat routes.
+
+New data files generated under `data/`:
+
+- `initial_triage_cases.json` (seed snapshot)
+- `triage_cases.json` (working DB)
+
+Assistant endpoints:
+
+- `GET /assistant/welcome/{session_id}`
+- `POST /assistant/ask`
+
+Sample ask payload:
+
+```json
+{
+  "session_id": "soc-user-1",
+  "prompt": "Classify high-risk events and escalate critical ones"
+}
+```
+
+Additional optional env vars:
+
+- `PydanticAI_MODEL` (default: `vertexai:gemini-2.5-flash`)
+- `ASSISTANT_TIMEOUT_SECONDS` (default: `25`)
+
