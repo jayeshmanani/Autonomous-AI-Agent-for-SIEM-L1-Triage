@@ -1,0 +1,17 @@
+[project]
+name = "ai-agents-triage-l1"
+version = "0.1.0"
+description = "Autonomous AI agent for SIEM L1 triage. Analyzes and prioritizes alerts, enriches them with context, and performs initial investigation steps to speed up response and reduce analyst workload, enabling teams to focus on advanced threat analysis."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.135.3",
+    "google-cloud-aiplatform>=1.147.0",
+    "langfuse>=4.0.6",
+    "opentelemetry-exporter-otlp>=1.40.0",
+    "opentelemetry-sdk>=1.40.0",
+    "pydantic-ai>=0.8.1",
+    "python-dotenv>=1.2.2",
+    "requests>=2.33.1",
+    "uvicorn>=0.44.0",
+]
