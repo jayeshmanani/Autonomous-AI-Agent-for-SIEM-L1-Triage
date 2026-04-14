@@ -31,7 +31,14 @@
         <div class="task-grid">
           <button id="btn-summary" class="task-btn">Dataset Summary</button>
           <button id="btn-escalations" class="task-btn">Escalation Snapshot</button>
+          <button id="btn-audit" class="task-btn">Show Baseline Audit</button>
         </div>
+
+        <section class="audit-box">
+          <h3>Baseline Audit (initial vs triage)</h3>
+          <p id="audit-stats" class="audit-stats">No audit loaded yet.</p>
+          <div id="audit-list" class="audit-list"></div>
+        </section>
 
         <form id="triage-origin-form" class="task-form">
           <label for="origin-input">Triage by origin (event_type, source, IP, etc.)</label>

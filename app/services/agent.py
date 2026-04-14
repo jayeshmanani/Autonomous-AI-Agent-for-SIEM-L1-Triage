@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from collections import Counter
 import os
+import re
 from typing import Any
 
 from dotenv import load_dotenv
@@ -13,6 +14,7 @@ from app.services.database import (
     classify_and_tag_case,
     escalate_case,
     get_all_cases,
+    get_change_audit,
     get_case_by_event_id,
     get_case_summary,
     search_cases,
@@ -171,6 +173,93 @@ def _local_assistant_response(prompt: str) -> AssistantResponse:
     )
 
 
+UUID_PATTERN = re.compile(
+    r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b"
+)
+
+
+def _extract_event_id(prompt: str) -> str | None:
+    match = UUID_PATTERN.search(prompt)
+    if not match:
+        return None
+    return match.group(0)
+
+
+def _handle_deterministic_action(prompt: str) -> AssistantResponse | None:
+    """Handle write-actions deterministically so updates work even when LLM is unavailable."""
+    q = prompt.strip().lower()
+
+    if "audit" in q or "verify" in q or "reflect" in q or "updated" in q:
+        audit = get_change_audit(limit=5)
+        return AssistantResponse(
+            message=(
+                f"Audit summary: changed_records={audit['changed_records']}, "
+                f"classified_non_unknown={audit['classified_non_unknown']}, "
+                f"status_not_new={audit['status_not_new']}, updated_at_count={audit['updated_at_count']}."
+            ),
+            top_threat_identified=None,
+            escalation_actions_queued=None,
+        )
+
+    event_id = _extract_event_id(prompt)
+    if not event_id:
+        return None
+
+    if "classify" in q or "tag" in q or "triage" in q:
+        case = classify_and_tag_case(event_id)
+        if case is None:
+            return AssistantResponse(
+                message=f"No case found for event_id={event_id}.",
+                top_threat_identified=None,
+                escalation_actions_queued=None,
+            )
+
+        queued = (
+            [
+                EscalationAction(
+                    event_id=event_id,
+                    action=f"Escalate to {case.get('escalation_target') or 'L2-IR'}",
+                )
+            ]
+            if bool(case.get("escalated"))
+            else None
+        )
+        return AssistantResponse(
+            message=(
+                f"Case {event_id} updated: classification={case.get('classification')}, "
+                f"priority={case.get('priority')}, risk_score={case.get('risk_score')}, "
+                f"status={case.get('status')}."
+            ),
+            top_threat_identified=event_id,
+            escalation_actions_queued=queued,
+        )
+
+    if "escalate" in q:
+        case = escalate_case(event_id, reason="Assistant requested escalation")
+        if case is None:
+            return AssistantResponse(
+                message=f"No case found for event_id={event_id}.",
+                top_threat_identified=None,
+                escalation_actions_queued=None,
+            )
+
+        return AssistantResponse(
+            message=(
+                f"Case {event_id} escalated successfully to "
+                f"{case.get('escalation_target') or 'L2-IR'}."
+            ),
+            top_threat_identified=event_id,
+            escalation_actions_queued=[
+                EscalationAction(
+                    event_id=event_id,
+                    action=f"Escalated to {case.get('escalation_target') or 'L2-IR'}",
+                )
+            ],
+        )
+
+    return None
+
+
 def _build_fallback_response(prompt: str) -> AssistantResponse:
     return _local_assistant_response(prompt)
 
@@ -203,6 +292,10 @@ siem_agent = Agent(
 
 async def run_siem_assistant(prompt: str, message_history: list[Any]) -> tuple[AssistantResponse, list[Any]]:
     """Run the SIEM assistant and return structured response plus updated history."""
+    deterministic = _handle_deterministic_action(prompt)
+    if deterministic is not None:
+        return deterministic, message_history
+
     try:
         result = await asyncio.wait_for(
             siem_agent.run(prompt, message_history=message_history),

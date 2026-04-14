@@ -220,5 +220,6 @@ wheels/
 .env
 gcloud.json
 store.json
+data/triage_cases.json
 uv.lock
 .DS_Store
