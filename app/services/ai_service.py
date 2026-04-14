@@ -43,6 +43,21 @@ SUSPICIOUS_KEYWORDS = (
     "dns tunneling",
 )
 
+DECISION_FIELDS = (
+    "event_type",
+    "source",
+    "severity",
+    "description",
+    "raw_log",
+    "additional_info",
+    "alert_type",
+    "src_ip",
+    "dst_ip",
+    "advanced_metadata",
+    "behavioral_analytics",
+    "mitre_techniques",
+)
+
 
 def _safe_float(value: Any, default: float = 0.0) -> float:
     try:
@@ -54,6 +69,79 @@ def _safe_float(value: Any, default: float = 0.0) -> float:
 def _normalize_severity(value: str | None) -> str:
     sev = str(value or "medium").strip().lower()
     return sev if sev in SEVERITY_WEIGHT else "medium"
+
+
+def _extract_keyword_hits(text_blob: str) -> tuple[list[str], list[str]]:
+    malicious_hits = [item for item in MALICIOUS_KEYWORDS if item in text_blob]
+    suspicious_hits = [item for item in SUSPICIOUS_KEYWORDS if item in text_blob]
+    return malicious_hits, suspicious_hits
+
+
+def _collect_fields_used(event: dict[str, Any]) -> list[str]:
+    fields: list[str] = []
+    for field in DECISION_FIELDS:
+        value = event.get(field)
+        if value is None:
+            continue
+        if isinstance(value, str) and not value.strip():
+            continue
+        if isinstance(value, (list, dict)) and not value:
+            continue
+        fields.append(field)
+    return fields
+
+
+def _build_triage_reasoning(
+    event: dict[str, Any],
+    risk_score: float,
+    classification: str,
+    priority: str,
+    abuse_score: int,
+) -> list[str]:
+    reasons: list[str] = []
+    severity = _normalize_severity(event.get("severity"))
+    reasons.append(
+        f"Classification is {classification} with priority {priority} based on composite risk {risk_score}/100."
+    )
+    reasons.append(f"Severity input considered: {severity}.")
+
+    metadata = event.get("advanced_metadata") or {}
+    metadata_risk = _safe_float(metadata.get("risk_score"), 0.0)
+    metadata_conf = _safe_float(metadata.get("confidence"), 0.5)
+    reasons.append(
+        f"Metadata contribution considered (risk_score={metadata_risk}, confidence={round(metadata_conf, 2)})."
+    )
+
+    behavior = event.get("behavioral_analytics") or {}
+    behavior_flags: list[str] = []
+    if bool(behavior.get("frequency_anomaly")):
+        behavior_flags.append("frequency_anomaly")
+    if bool(behavior.get("sequence_anomaly")):
+        behavior_flags.append("sequence_anomaly")
+    if _safe_float(behavior.get("baseline_deviation"), 0.0) > 0:
+        behavior_flags.append("baseline_deviation")
+    if behavior_flags:
+        reasons.append(f"Behavior analytics flags influenced score: {', '.join(behavior_flags)}.")
+
+    text_blob = " ".join(
+        [
+            str(event.get("raw_log") or ""),
+            str(event.get("description") or ""),
+            str(event.get("additional_info") or ""),
+            str(event.get("alert_type") or ""),
+        ]
+    ).lower()
+    malicious_hits, suspicious_hits = _extract_keyword_hits(text_blob)
+    keyword_hits = malicious_hits or suspicious_hits
+    if keyword_hits:
+        reasons.append(f"Keyword signals found in log context: {', '.join(sorted(set(keyword_hits)))}.")
+
+    if abuse_score > 0:
+        reasons.append(f"Threat-intel abuse score considered: {abuse_score}.")
+
+    used_fields = _collect_fields_used(event)
+    reasons.append(f"Decision used fields: {', '.join(used_fields)}.")
+    return reasons
 
 
 def _calculate_risk_score(event: dict[str, Any], abuse_score: int) -> float:
@@ -75,9 +163,10 @@ def _calculate_risk_score(event: dict[str, Any], abuse_score: int) -> float:
     ).lower()
 
     keyword_bonus = 0.0
-    if any(item in text_blob for item in MALICIOUS_KEYWORDS):
+    malicious_hits, suspicious_hits = _extract_keyword_hits(text_blob)
+    if malicious_hits:
         keyword_bonus += 20.0
-    elif any(item in text_blob for item in SUSPICIOUS_KEYWORDS):
+    elif suspicious_hits:
         keyword_bonus += 10.0
 
     behavior = event.get("behavioral_analytics") or {}
@@ -135,6 +224,8 @@ def analyze_event(event: dict[str, Any], abuse_score: int = 0) -> dict[str, Any]
     risk_score = round(_calculate_risk_score(event, abuse_score), 2)
     classification, confidence_band, priority = _classify(risk_score)
     tags = _build_tags(event, classification, risk_score, abuse_score)
+    used_fields = _collect_fields_used(event)
+    triage_reasoning = _build_triage_reasoning(event, risk_score, classification, priority, abuse_score)
 
     escalation_required = (
         classification == "malicious"
@@ -164,6 +255,8 @@ def analyze_event(event: dict[str, Any], abuse_score: int = 0) -> dict[str, Any]
         "risk_score": risk_score,
         "abuse_confidence_score": abuse_score,
         "summary": summary,
+        "decision_reasoning": triage_reasoning,
+        "decision_fields_used": used_fields,
         "tags": tags,
         "escalation": {
             "required": escalation_required,

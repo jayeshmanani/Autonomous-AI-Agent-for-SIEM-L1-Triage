@@ -95,6 +95,9 @@ def classify_and_tag_case(event_id: str) -> dict[str, Any] | None:
     target["tags"] = analysis["tags"]
     target["escalated"] = analysis["escalation"]["required"]
     target["escalation_target"] = analysis["escalation"]["target_queue"]
+    target["triage_summary"] = analysis["summary"]
+    target["triage_reasoning"] = analysis.get("decision_reasoning", [])
+    target["decision_fields_used"] = analysis.get("decision_fields_used", [])
     target["updated_at"] = _now_iso()
 
     if target.get("status") in {None, "new"}:
@@ -227,16 +230,7 @@ def triage_cases_by_origin(origin: str, limit: int = 100) -> dict[str, Any]:
     cases = _load_db()
 
     def _matches(case: dict[str, Any]) -> bool:
-        haystack = " ".join(
-            [
-                str(case.get("event_type") or ""),
-                str(case.get("source") or ""),
-                str(case.get("src_ip") or ""),
-                str(case.get("dst_ip") or ""),
-                str(case.get("raw_log") or ""),
-                str(case.get("description") or ""),
-            ]
-        ).lower()
+        haystack = json.dumps(case, default=str).lower()
         return normalized_origin in haystack
 
     matched_indices = [index for index, case in enumerate(cases) if _matches(case)]
@@ -263,6 +257,9 @@ def triage_cases_by_origin(origin: str, limit: int = 100) -> dict[str, Any]:
         case["tags"] = analysis["tags"]
         case["escalated"] = analysis["escalation"]["required"]
         case["escalation_target"] = analysis["escalation"]["target_queue"]
+        case["triage_summary"] = analysis["summary"]
+        case["triage_reasoning"] = analysis.get("decision_reasoning", [])
+        case["decision_fields_used"] = analysis.get("decision_fields_used", [])
         case["status"] = "escalated" if analysis["escalation"]["required"] else "triaged"
         case["updated_at"] = _now_iso()
 
@@ -276,6 +273,9 @@ def triage_cases_by_origin(origin: str, limit: int = 100) -> dict[str, Any]:
                 "risk_score": case["risk_score"],
                 "escalated": case["escalated"],
                 "status": case["status"],
+                "summary": case["triage_summary"],
+                "reasoning": case["triage_reasoning"],
+                "fields_used": case["decision_fields_used"],
             }
         )
 
