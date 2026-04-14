@@ -6,6 +6,7 @@ const chatInput = document.getElementById("chat-input");
 const btnSummary = document.getElementById("btn-summary");
 const btnEscalations = document.getElementById("btn-escalations");
 const btnAudit = document.getElementById("btn-audit");
+const btnAuditRefresh = document.getElementById("btn-audit-refresh");
 const triageOriginForm = document.getElementById("triage-origin-form");
 const originInput = document.getElementById("origin-input");
 const originLimit = document.getElementById("origin-limit");
@@ -13,6 +14,15 @@ const singleTriageForm = document.getElementById("single-triage-form");
 const rawLogInput = document.getElementById("raw-log-input");
 const auditStats = document.getElementById("audit-stats");
 const auditList = document.getElementById("audit-list");
+const auditLimitInput = document.getElementById("audit-limit");
+
+function getAuditLimit() {
+  const raw = Number(auditLimitInput.value || 50);
+  if (!Number.isFinite(raw)) {
+    return 50;
+  }
+  return Math.max(1, Math.min(Math.trunc(raw), 1000));
+}
 
 function appendMessage(role, text) {
   const div = document.createElement("div");
@@ -52,7 +62,11 @@ function renderAudit(data) {
   const changed = Number(data.changed_records || 0);
   const classified = Number(data.classified_non_unknown || 0);
   const updated = Number(data.updated_at_count || 0);
-  auditStats.textContent = `Changed records: ${changed} | Classified: ${classified} | Updated timestamps: ${updated}`;
+  const seedCount = Number(data.seed_count || 0);
+  const currentCount = Number(data.current_count || 0);
+  const requestedLimit = getAuditLimit();
+  const showing = Math.min(changed, requestedLimit);
+  auditStats.textContent = `DB records: ${currentCount} (baseline: ${seedCount}) | Changed: ${changed} | Showing: ${showing} | Classified: ${classified} | Updated timestamps: ${updated}`;
 
   auditList.innerHTML = "";
   const samples = Array.isArray(data.samples) ? data.samples : [];
@@ -82,7 +96,8 @@ function renderAudit(data) {
 
 async function loadAudit() {
   try {
-    const resp = await fetch("/assistant/audit?limit=10");
+    const requestedLimit = getAuditLimit();
+    const resp = await fetch(`/assistant/audit?limit=${encodeURIComponent(requestedLimit)}`);
     const data = await resp.json();
     renderAudit(data);
   } catch {
@@ -118,6 +133,10 @@ btnAudit.addEventListener("click", async () => {
   await loadAudit();
 });
 
+btnAuditRefresh.addEventListener("click", async () => {
+  await loadAudit();
+});
+
 triageOriginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const origin = originInput.value.trim();
@@ -131,7 +150,7 @@ triageOriginForm.addEventListener("submit", async (e) => {
       method: "POST",
     });
     const data = await resp.json();
-    const report = `Triage by origin result:\nMatched: ${data.matched}\nProcessed: ${data.processed}\nEscalated: ${data.escalated}`;
+      const report = `Triage by origin result:\nMatched: ${data.matched}\nEligible New: ${data.eligible_new}\nAlready Processed: ${data.already_processed}\nProcessed Now: ${data.processed}\nEscalated: ${data.escalated}\nRemaining New: ${data.remaining_new}`;
     appendMessage("agent", report);
     await loadAudit();
   } catch {

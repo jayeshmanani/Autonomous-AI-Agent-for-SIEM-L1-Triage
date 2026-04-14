@@ -41,5 +41,5 @@ async def ask_assistant(query: UserQuery):
 
 @router.get("/audit")
 async def audit_changes(limit: int = 10):
-    safe_limit = max(1, min(limit, 50))
+    safe_limit = max(1, min(limit, 1000))
     return get_change_audit(limit=safe_limit)

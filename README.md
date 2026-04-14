@@ -206,7 +206,7 @@ New modules:
 New data files generated under `data/`:
 
 - `initial_triage_cases.json` (seed snapshot)
-- `triage_cases.json` (working DB)
+- `triage_cases.json` (working DB, generated automatically at runtime if missing)
 
 Assistant endpoints:
 
@@ -226,6 +226,12 @@ Additional optional env vars:
 
 - `PydanticAI_MODEL` (default: `vertexai:gemini-2.5-flash`)
 - `ASSISTANT_TIMEOUT_SECONDS` (default: `25`)
+
+Notes on first-run data behavior:
+
+- Keep `data/initial_triage_cases.json` and `data/sample_logs.json` in the repository.
+- `data/triage_cases.json` is runtime state and is auto-created from `initial_triage_cases.json` on first use.
+- `data/triage_cases.json` is git-ignored so local triage mutations are not committed by default.
 
 ## Web UI (Chat + Actions)
 

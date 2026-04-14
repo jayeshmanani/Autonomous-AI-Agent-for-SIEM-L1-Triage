@@ -132,6 +132,35 @@ body {
   font-size: 14px;
 }
 
+.audit-controls {
+  display: grid;
+  grid-template-columns: auto 80px auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.audit-controls label {
+  font-size: 13px;
+  color: #2f4a56;
+}
+
+.audit-controls input {
+  border: 1px solid #b8c0c4;
+  border-radius: 8px;
+  padding: 6px;
+}
+
+.audit-controls button {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  background: #184e77;
+  color: white;
+  font-weight: 600;
+}
+
 .audit-stats {
   margin: 0 0 8px;
   font-size: 13px;
