@@ -10,11 +10,13 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from .routers.assistant import router as assistant_router
 from .services.ai_service import analyze_event, answer_question, summarize_events
 from .services.threat_intel import get_ip_reputation
 from .utils.log_parser import load_events, normalize_event
 
 app = FastAPI(title="Autonomous AI Agent for SIEM L1 Triage", version="1.0.0")
+app.include_router(assistant_router)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASET = PROJECT_ROOT / "data" / "sample_logs.json"
