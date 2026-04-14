@@ -227,3 +227,27 @@ Additional optional env vars:
 - `PydanticAI_MODEL` (default: `vertexai:gemini-2.5-flash`)
 - `ASSISTANT_TIMEOUT_SECONDS` (default: `25`)
 
+## Web UI (Chat + Actions)
+
+The app now includes a browser-based SOC console so you can talk to the agent and run triage tasks without manually calling APIs.
+
+How to use:
+
+1. Start the server:
+  - `uv run uvicorn app.main:app --reload`
+2. Open:
+  - `http://127.0.0.1:8000/`
+
+What you can do in the UI:
+
+- Chat with the assistant in a live session.
+- Ask data-analysis questions and escalation questions.
+- Run origin-based triage (for event types, source names, or IP fragments).
+- Paste one raw log and get immediate triage output.
+
+UI-related routes:
+
+- `GET /` (web console)
+- `GET /static/*` (UI assets)
+- `POST /triage/by-origin/{origin}` (bulk triage by origin filter)
+

@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections import Counter
 import os
 from typing import Any
 
 from dotenv import load_dotenv
 from pydantic_ai import Agent
 
-from app.models.assistant import AssistantResponse
+from app.models.assistant import AssistantResponse, EscalationAction
 from app.services.database import (
     classify_and_tag_case,
     escalate_case,
@@ -53,18 +54,125 @@ def search(keyword: str) -> list[dict[str, Any]]:
     return search_cases(keyword, limit=10)
 
 
-def _build_fallback_response(prompt: str) -> AssistantResponse:
+def _severity_rank(value: str | None) -> int:
+    order = {
+        "emergency": 6,
+        "critical": 5,
+        "high": 4,
+        "medium": 3,
+        "low": 2,
+        "info": 1,
+    }
+    return order.get(str(value or "").lower(), 0)
+
+
+def _top_priority_cases(cases: list[dict[str, Any]], limit: int = 5) -> list[dict[str, Any]]:
+    def _score(case: dict[str, Any]) -> tuple[int, int, float, int]:
+        escalated = 1 if bool(case.get("escalated")) else 0
+        severity = _severity_rank(str(case.get("severity") or ""))
+        risk = float(case.get("risk_score") or 0.0)
+        is_new = 1 if str(case.get("status") or "new").lower() in {"new", "triaged"} else 0
+        return (escalated, severity, risk, is_new)
+
+    ranked = sorted(cases, key=_score, reverse=True)
+    return ranked[:limit]
+
+
+def _build_priority_recommendations(cases: list[dict[str, Any]]) -> list[str]:
+    escalated_new = [
+        case
+        for case in cases
+        if bool(case.get("escalated")) and str(case.get("status") or "new").lower() in {"new", "triaged"}
+    ]
+    high_risk = [case for case in cases if float(case.get("risk_score") or 0.0) >= 80]
+    high_severity = [case for case in cases if _severity_rank(case.get("severity")) >= 5]
+
+    recommendations = [
+        f"Triage escalated new/triaged cases first: {len(escalated_new)} open high-priority items.",
+        f"Validate top risk events (risk_score >= 80): {len(high_risk)} cases.",
+        f"Focus on critical/emergency severity stream: {len(high_severity)} cases.",
+    ]
+    return recommendations
+
+
+def _local_assistant_response(prompt: str) -> AssistantResponse:
+    cases = get_all_cases()
     summary = get_case_summary()
-    top_message = (
-        f"I could not reach the configured LLM right now, but I can still help. "
-        f"Current totals: {summary['total_cases']} cases, {summary['escalated_cases']} escalated. "
-        f"You asked: {prompt}"
-    )
+    q = prompt.strip().lower()
+
+    escalated = int(summary.get("escalated_cases", 0))
+    total = int(summary.get("total_cases", 0))
+
+    top_cases = _top_priority_cases(cases, limit=5)
+    top_case = top_cases[0] if top_cases else None
+    top_threat = None
+    if top_case is not None:
+        top_threat = (
+            f"{top_case.get('event_id')} "
+            f"({top_case.get('event_type')}, severity={top_case.get('severity')}, risk={top_case.get('risk_score')})"
+        )
+
+    queued_actions = [
+        EscalationAction(
+            event_id=str(case.get("event_id")),
+            action=f"Review and escalate to {case.get('escalation_target') or 'L2-IR'}",
+        )
+        for case in top_cases
+        if bool(case.get("escalated"))
+    ]
+
+    if ("escalat" in q and "priorit" in q) or ("how many cases are escalated" in q):
+        recommendations = _build_priority_recommendations(cases)
+        coverage = f"{(escalated / total * 100):.1f}%" if total else "0.0%"
+        message = (
+            f"{escalated} out of {total} cases are escalated ({coverage}).\n"
+            f"Priority right now:\n"
+            f"1) {recommendations[0]}\n"
+            f"2) {recommendations[1]}\n"
+            f"3) {recommendations[2]}"
+        )
+        return AssistantResponse(
+            message=message,
+            top_threat_identified=top_threat,
+            escalation_actions_queued=queued_actions or None,
+        )
+
+    if "summary" in q or "overview" in q:
+        status_distribution = summary.get("status_distribution", {})
+        class_distribution = summary.get("classification_distribution", {})
+        message = (
+            f"Current case overview: total={total}, escalated={escalated}. "
+            f"Status split={status_distribution}. Classification split={class_distribution}."
+        )
+        return AssistantResponse(
+            message=message,
+            top_threat_identified=top_threat,
+            escalation_actions_queued=queued_actions or None,
+        )
+
+    if "source" in q or "origin" in q or "event type" in q:
+        event_counts = Counter(str(case.get("event_type") or "unknown").lower() for case in cases)
+        top_event_types = event_counts.most_common(3)
+        message = f"Top origins/event types by volume: {top_event_types}."
+        return AssistantResponse(
+            message=message,
+            top_threat_identified=top_threat,
+            escalation_actions_queued=queued_actions or None,
+        )
+
     return AssistantResponse(
-        message=top_message,
-        top_threat_identified=None,
-        escalation_actions_queued=None,
+        message=(
+            "LLM is temporarily unavailable, so I switched to local triage intelligence. "
+            f"We currently have {total} cases and {escalated} escalated. "
+            "You can ask for escalation priorities, dataset summary, or origin-based trends."
+        ),
+        top_threat_identified=top_threat,
+        escalation_actions_queued=queued_actions or None,
     )
+
+
+def _build_fallback_response(prompt: str) -> AssistantResponse:
+    return _local_assistant_response(prompt)
 
 
 MODEL_NAME = os.getenv("PydanticAI_MODEL", "vertexai:gemini-2.5-flash")

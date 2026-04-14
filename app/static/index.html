@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SIEM L1 Triage Agent Console</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="panel panel-chat">
+        <header class="panel-header">
+          <h1>SIEM L1 Agent Chat</h1>
+          <p>Ask about data trends, triage status, and escalation decisions.</p>
+        </header>
+
+        <div id="chat-window" class="chat-window" aria-live="polite"></div>
+
+        <form id="chat-form" class="chat-form">
+          <input id="chat-input" type="text" placeholder="Ask the assistant anything about your SIEM data..." required />
+          <button type="submit">Send</button>
+        </form>
+      </section>
+
+      <section class="panel panel-tasks">
+        <header class="panel-header">
+          <h2>Agent Actions</h2>
+          <p>Run triage workflows directly from UI.</p>
+        </header>
+
+        <div class="task-grid">
+          <button id="btn-summary" class="task-btn">Dataset Summary</button>
+          <button id="btn-escalations" class="task-btn">Escalation Snapshot</button>
+        </div>
+
+        <form id="triage-origin-form" class="task-form">
+          <label for="origin-input">Triage by origin (event_type, source, IP, etc.)</label>
+          <div class="inline-row">
+            <input id="origin-input" type="text" placeholder="e.g. ids_alert, splunk, 54.159.34.148" required />
+            <input id="origin-limit" type="number" min="1" max="200" value="50" />
+            <button type="submit">Run</button>
+          </div>
+        </form>
+
+        <form id="single-triage-form" class="task-form">
+          <label for="raw-log-input">Quick triage from raw log</label>
+          <textarea id="raw-log-input" rows="5" placeholder="Paste one log line to classify and tag"></textarea>
+          <button type="submit">Triage Log</button>
+        </form>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

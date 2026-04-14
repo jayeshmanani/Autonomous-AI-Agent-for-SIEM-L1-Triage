@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .routers.assistant import router as assistant_router
@@ -20,11 +22,15 @@ app.include_router(assistant_router)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATASET = PROJECT_ROOT / "data" / "sample_logs.json"
+STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 MAX_DATASET_RECORDS = int(os.getenv("MAX_DATASET_RECORDS", "25000"))
 MAX_BATCH_SIZE = int(os.getenv("MAX_BATCH_SIZE", "200"))
 
 TRIAGE_HISTORY: list[dict[str, Any]] = []
+
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 class TriageRequest(BaseModel):
@@ -83,6 +89,14 @@ async def health() -> dict[str, Any]:
     }
 
 
+@app.get("/")
+async def home() -> FileResponse:
+    index_file = STATIC_DIR / "index.html"
+    if not index_file.exists():
+        raise HTTPException(status_code=404, detail="UI file not found.")
+    return FileResponse(index_file)
+
+
 @app.post("/triage")
 async def triage_log(item: TriageRequest) -> dict[str, Any]:
     payload = item.event if item.event is not None else item.raw_log
@@ -104,6 +118,49 @@ async def triage_batch(request: BatchTriageRequest) -> dict[str, Any]:
     results = [_triage_single(item, enrich_threat_intel=request.enrich_threat_intel) for item in request.events]
     escalated = sum(1 for item in results if item.get("analysis", {}).get("escalation", {}).get("required"))
     return {
+        "processed": len(results),
+        "escalated": escalated,
+        "results": results,
+    }
+
+
+@app.post("/triage/by-origin/{origin}")
+async def triage_by_origin(origin: str, limit: int = 100, enrich_threat_intel: bool = False) -> dict[str, Any]:
+    normalized_origin = origin.strip().lower()
+    if not normalized_origin:
+        raise HTTPException(status_code=400, detail="Origin cannot be empty.")
+
+    safe_limit = max(1, min(limit, MAX_BATCH_SIZE))
+    events = get_dataset()
+
+    matched = [
+        event
+        for event in events
+        if (
+            normalized_origin in str(event.get("event_type", "")).lower()
+            or normalized_origin in str(event.get("source", "")).lower()
+            or normalized_origin in str(event.get("src_ip", "")).lower()
+            or normalized_origin in str(event.get("dst_ip", "")).lower()
+            or normalized_origin in str(event.get("geo_location", "")).lower()
+        )
+    ]
+
+    if not matched:
+        return {
+            "origin": origin,
+            "matched": 0,
+            "processed": 0,
+            "escalated": 0,
+            "results": [],
+        }
+
+    selected = matched[:safe_limit]
+    results = [_triage_single(event, enrich_threat_intel=enrich_threat_intel) for event in selected]
+    escalated = sum(1 for item in results if item.get("analysis", {}).get("escalation", {}).get("required"))
+
+    return {
+        "origin": origin,
+        "matched": len(matched),
         "processed": len(results),
         "escalated": escalated,
         "results": results,
