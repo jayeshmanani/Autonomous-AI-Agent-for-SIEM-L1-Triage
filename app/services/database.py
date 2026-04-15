@@ -24,6 +24,8 @@ def reset_database() -> None:
     if SEED_FILE.exists():
         shutil.copy(SEED_FILE, DB_FILE)
 
+from app.services.threat_intel import get_ip_reputation, get_vt_reputation
+
 
 from filelock import FileLock
 import threading
@@ -83,6 +85,22 @@ def get_case_summary() -> dict[str, Any]:
     }
 
 
+def _fetch_threat_intel(event: dict[str, Any]) -> tuple[int, int]:
+    abuse_score = int(event.get("abuse_score", 0) or 0)
+    vt_score = 0
+    
+    ips = [ip for ip in (event.get("src_ip"), event.get("dst_ip")) if ip]
+    for ip in set(ips):
+        abuse_score = max(abuse_score, get_ip_reputation(ip))
+        vt_score = max(vt_score, get_vt_reputation(ip))
+        
+    indicators = [ind for ind in (event.get("file_hash"), event.get("url")) if ind]
+    for ind in set(indicators):
+        vt_score = max(vt_score, get_vt_reputation(ind))
+        
+    return abuse_score, vt_score
+
+
 def classify_and_tag_case(event_id: str) -> dict[str, Any] | None:
     cases = _load_db()
     target: dict[str, Any] | None = None
@@ -95,7 +113,8 @@ def classify_and_tag_case(event_id: str) -> dict[str, Any] | None:
     if target is None:
         return None
 
-    analysis = analyze_event(target, abuse_score=int(target.get("abuse_score", 0) or 0))
+    abuse_score, vt_score = _fetch_threat_intel(target)
+    analysis = analyze_event(target, abuse_score=abuse_score, vt_score=vt_score)
     target["classification"] = analysis["classification"]
     target["priority"] = analysis["priority"]
     target["risk_score"] = analysis["risk_score"]
@@ -272,7 +291,8 @@ def triage_cases_by_origin(origin: str, limit: int = 100) -> dict[str, Any]:
 
     for index in selected_indices:
         case = cases[index]
-        analysis = analyze_event(case, abuse_score=int(case.get("abuse_score", 0) or 0))
+        abuse_score, vt_score = _fetch_threat_intel(case)
+        analysis = analyze_event(case, abuse_score=abuse_score, vt_score=vt_score)
 
         case["classification"] = analysis["classification"]
         case["priority"] = analysis["priority"]
