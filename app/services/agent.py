@@ -28,7 +28,7 @@ from app.services.database import (
     filter_cases_by_origin,
     triage_cases_by_origin,
 )
-from app.services.threat_intel import get_ip_reputation
+from app.services.threat_intel import get_ip_reputation, get_vt_reputation
 
 load_dotenv()
 
@@ -318,6 +318,7 @@ siem_agent = Agent(
         escalate,
         search,
         get_ip_reputation,
+        get_vt_reputation,
         filter_cases_by_origin,
         triage_cases_by_origin,
     ],
@@ -332,8 +333,9 @@ siem_agent = Agent(
         "5) In message, include a brief conclusion and next action. Keep responses concise and actionable. "
         "6) Never fabricate evidence; if data is missing, explicitly say so in reasoning. "
         "7) Use get_ip_reputation to fetch the AbuseIPDB confidence score for suspect IPs when reviewing cases. "
-        "8) Use filter_cases_by_origin to find existing cases by their origin source (like network logs or firewalls). "
-        "9) Use triage_cases_by_origin to perform a bulk classification and triage pass on all new cases originating from a specific origin source."
+        "8) Use get_vt_reputation to fetch the VirusTotal scan score for suspect domains, hashes, or URLs. "
+        "9) Use filter_cases_by_origin to find existing cases by their origin source (like network logs or firewalls). "
+        "10) Use triage_cases_by_origin to perform a bulk classification and triage pass on all new cases originating from a specific origin source."
     ),
 )
 
