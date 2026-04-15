@@ -25,6 +25,8 @@ from app.services.database import (
     get_case_by_event_id,
     get_case_summary,
     search_cases,
+    filter_cases_by_origin,
+    triage_cases_by_origin,
 )
 from app.services.threat_intel import get_ip_reputation
 
@@ -316,6 +318,8 @@ siem_agent = Agent(
         escalate,
         search,
         get_ip_reputation,
+        filter_cases_by_origin,
+        triage_cases_by_origin,
     ],
     system_prompt=(
         "You are an autonomous SOC L1 triage assistant. "
@@ -327,7 +331,9 @@ siem_agent = Agent(
         "4) Always populate the reasoning field with 2-5 concrete bullets tied to fields/metrics you used. "
         "5) In message, include a brief conclusion and next action. Keep responses concise and actionable. "
         "6) Never fabricate evidence; if data is missing, explicitly say so in reasoning. "
-        "7) Use get_ip_reputation to fetch the AbuseIPDB confidence score for suspect IPs when reviewing cases."
+        "7) Use get_ip_reputation to fetch the AbuseIPDB confidence score for suspect IPs when reviewing cases. "
+        "8) Use filter_cases_by_origin to find existing cases by their origin source (like network logs or firewalls). "
+        "9) Use triage_cases_by_origin to perform a bulk classification and triage pass on all new cases originating from a specific origin source."
     ),
 )
 

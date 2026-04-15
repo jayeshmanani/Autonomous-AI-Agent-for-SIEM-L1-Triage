@@ -217,6 +217,22 @@ def get_change_audit(limit: int = 10) -> dict[str, Any]:
     }
 
 
+def filter_cases_by_origin(origin: str, limit: int = 100) -> list[dict[str, Any]]:
+    """Filter all cases by an origin keyword."""
+    normalized_origin = origin.strip().lower()
+    if not normalized_origin:
+        return []
+
+    cases = _load_db()
+    
+    def _matches(case: dict[str, Any]) -> bool:
+        haystack = json.dumps(case, default=str).lower()
+        return normalized_origin in haystack
+
+    matched = [c for c in cases if _matches(c)]
+    return matched[:limit]
+
+
 def triage_cases_by_origin(origin: str, limit: int = 100) -> dict[str, Any]:
     """Classify and update existing triage DB records filtered by origin keyword."""
     normalized_origin = origin.strip().lower()
