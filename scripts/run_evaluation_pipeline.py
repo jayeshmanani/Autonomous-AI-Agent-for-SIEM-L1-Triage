@@ -1,15 +1,27 @@
 import asyncio
 import os
-from langfuse import Langfuse
+from langfuse import Langfuse, Evaluation
 from langfuse.api import NotFoundError, DatasetItem
 from langfuse.experiment import ExperimentResult
 from loguru import logger
 from pydantic import BaseModel, Field
 import json
 
+from pydantic_ai.messages import ModelResponse, ToolCallPart
+
 from app.services.agent import run_siem_assistant
 from app.services.database import DATA_DIR
 from app.models.assistant import AssistantResponse
+
+def extract_tool_calls(messages) -> list[str]:
+    """Extract tool names from pydantic_ai messages."""
+    executed_tools = []
+    for message in messages:
+        if isinstance(message, ModelResponse):
+            for part in message.parts:
+                if isinstance(part, ToolCallPart):
+                    executed_tools.append(part.tool_name)
+    return executed_tools
 
 # Initialize langfuse client (depends on environment variables LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_HOST)
 langfuse = Langfuse()
@@ -83,7 +95,7 @@ def upload_evaluation_data(evaluation_data) -> bool:
 async def call_agent(*, item: DatasetItem, **kwargs):
     q = item.input["question"]
     # Run the assistant returning an AssistantResponse model
-    run_results, _ = await run_siem_assistant(q, message_history=[])
+    run_results, messages = await run_siem_assistant(q, message_history=[])
     
     # Extract escalations for metadata
     escalations = [e.model_dump() for e in (run_results.escalation_actions_queued or [])]
@@ -93,51 +105,67 @@ async def call_agent(*, item: DatasetItem, **kwargs):
         "eval_metadata": {
             "top_threat": run_results.top_threat_identified,
             "escalations": escalations,
-            "reasoning": run_results.reasoning
+            "reasoning": run_results.reasoning,
+            "tool_calls": extract_tool_calls(messages)
         },
     }
 
 # Evaluators
-def answer_relevancy(run, item, **kwargs):
-    expected_output = item.expected_output
-    actual_output = run.output if isinstance(run.output, str) else str(run.output)
+def answer_relevancy(*args, **kwargs):
+    run = kwargs.get("run") or kwargs.get("output") or (args[0] if len(args) > 0 else None)
+    item = kwargs.get("dataset_item") or kwargs.get("item") or kwargs.get("input") or (args[1] if len(args) > 1 else None)
     
-    score = 1.0 if expected_output.lower() in actual_output.lower() else 0.0
-    return {
-        "name": "answer_relevancy",
-        "score": score,
-        "comment": f"Expected '{expected_output}' to be in actual output."
-    }
+    if not item or not run:
+        logger.warning(f"answer_relevancy args: {args}, kwargs: {kwargs}")
+        return Evaluation(name="answer_relevancy", value=0.0, comment="Error: missing run or dataset_item")
+
+    expected_output = item.get("expected_output", "") if hasattr(item, "get") else (item.expected_output if hasattr(item, "expected_output") else "")
+    actual_output = run.get("output", "") if hasattr(run, "get") else (run.output if hasattr(run, "output") else "")
+    actual_output_str = actual_output if isinstance(actual_output, str) else str(actual_output)
     
-def tool_calling_accuracy(run, item, **kwargs):
-    # Dummy evaluator for tool calling accuracy, assuming reasoning captures some tool calls
-    return {
-        "name": "tool_calling_accuracy",
-        "score": 1.0 if run.eval_metadata.get("reasoning") else 0.5,
-        "comment": "Check if reasoning is populated as a proxy for tool usage."
-    }
+    score = 1.0 if expected_output.lower() in actual_output_str.lower() else 0.0
+    return Evaluation(
+        name="answer_relevancy",
+        value=score,
+        comment=f"Expected '{expected_output}' to be in actual output."
+    )
+    
+def tool_calling_accuracy(*args, **kwargs):
+    run = kwargs.get("run") or kwargs.get("output") or (args[0] if len(args) > 0 else None)
+    if not run:
+        return Evaluation(name="tool_calling_accuracy", value=0.0, comment="Error: missing run")
+        
+    eval_metadata = run.get("eval_metadata", {}) if hasattr(run, "get") else (run.eval_metadata if hasattr(run, "eval_metadata") else {})
+    
+    # Actually use tool calls now!
+    tool_calls = eval_metadata.get("tool_calls", [])
+    reasoning = eval_metadata.get("reasoning", [])
+    
+    if len(tool_calls) > 0:
+        score = 1.0
+        comment = f"Tools used successfully: {', '.join(tool_calls)}"
+    elif reasoning:
+        score = 0.5
+        comment = "No tools used, but reasoning exists (likely deterministic path)."
+    else:
+        score = 0.0
+        comment = "No tools used and no reasoning provided."
+        
+    return Evaluation(
+        name="tool_calling_accuracy",
+        value=score,
+        comment=comment
+    )
 
 def create_annotation_results(eval_results: ExperimentResult):
     ## put the run into an annotation queue..
-    logger.info("Adding experiment to annotation queue..")
-    try:
-        queue = langfuse.api.annotation_queues.create_queue(
-            name="queue: " + eval_results.run_name,
-        )
-
-        for item in eval_results.item_results:
-            trace_id = item.trace_id
-            if trace_id:
-                trace = langfuse.api.trace.get(trace_id=trace_id)
-                observations = trace.observations if hasattr(trace, 'observations') else []
-                if observations:
-                    langfuse.api.annotation_queues.create_queue_item(
-                        queue_id=queue.id,
-                        object_id=observations[0].id,
-                        object_type="OBSERVATION",
-                    )
-    except Exception as e:
-         logger.warning(f"Could not create annotation queue: {e}")
+    logger.info("Skipping annotation queue creation as no valid score_config_ids are configured.")
+    # In a real environment, you'd fetch or provide a valid score_config_id here:
+    # queue = langfuse.api.annotation_queues.create_queue(
+    #     name="queue: " + eval_results.run_name,
+    #     score_config_ids=["YOUR_VALID_CONFIG_ID_HERE"],
+    # )
+    pass
 
 if __name__ == "__main__":
     logger.info("Reading evaluation dataset..")

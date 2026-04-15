@@ -10,25 +10,16 @@
       }
     },
     {
-      "question": "What is the status of event 3bd22c92-db2e-4769-a462-b64e197265b9?",
-      "expected_output": "3bd22c92-db2e-4769-a462-b64e197265b9",
+      "question": "What cases should I prioritize right now?",
+      "expected_output": "Priority right now",
       "metadata": {
         "expected_tool_calls": [
-          "lookup_case"
+          "fetch_triage_data"
         ]
       }
     },
     {
-      "question": "Are there any cases involving MITRE Technique T1486?",
-      "expected_output": "T1486",
-      "metadata": {
-        "expected_tool_calls": [
-          "search"
-        ]
-      }
-    },
-    {
-      "question": "Please escalate event 52da3d0f-3490-41bc-bf93-57da08b8e47c because of fileless execution.",
+      "question": "Please escalate event 8e785e09-5213-46b1-a6eb-b7e40998905b to L2 due to suspicious activity.",
       "expected_output": "escalated successfully",
       "metadata": {
         "expected_tool_calls": [
@@ -37,10 +28,742 @@
       }
     },
     {
-      "question": "What cases should I prioritize right now?",
-      "expected_output": "Priority right now",
+      "question": "What is the status of event 8e785e09-5213-46b1-a6eb-b7e40998905b?",
+      "expected_output": "8e785e09-5213-46b1-a6eb-b7e40998905b",
       "metadata": {
         "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "Are there any incidents involving IP address 164.126.92.251?",
+      "expected_output": "164.126.92.251",
+      "metadata": {
+        "expected_tool_calls": [
+          "search"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event d0632ca7-ab7c-4473-ab21-5a2d450fafc6 to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event 6cbcaaaa-809a-425a-99ad-e6366965790f to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event e17894dd-125a-4735-af25-7f603b34e61c to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event c8c8f323-8c56-45c8-91cf-19e30c08af67 to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event 11a9dddb-94e3-4492-b5ad-76d46c0a0b04?",
+      "expected_output": "11a9dddb-94e3-4492-b5ad-76d46c0a0b04",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event 2f4e9973-7df6-4275-94ca-7494a489db44?",
+      "expected_output": "2f4e9973-7df6-4275-94ca-7494a489db44",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event 99dd5bd7-2665-4ed8-8b35-0a6100a24987?",
+      "expected_output": "99dd5bd7-2665-4ed8-8b35-0a6100a24987",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "Search for recent cases involving T1134.001.",
+      "expected_output": "T1134.001",
+      "metadata": {
+        "expected_tool_calls": [
+          "search"
+        ]
+      }
+    },
+    {
+      "question": "Are there any incidents involving IP address 91.88.127.218?",
+      "expected_output": "91.88.127.218",
+      "metadata": {
+        "expected_tool_calls": [
+          "search"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event 1c20b289-e653-4401-817c-4cb17a4fe452?",
+      "expected_output": "1c20b289-e653-4401-817c-4cb17a4fe452",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "Are there any incidents involving IP address 173.202.67.141?",
+      "expected_output": "173.202.67.141",
+      "metadata": {
+        "expected_tool_calls": [
+          "search"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event f3947232-402c-45a6-ab62-412b1fd0acdc?",
+      "expected_output": "f3947232-402c-45a6-ab62-412b1fd0acdc",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event a6d5e6c2-ca45-4163-b321-a5fee123bd93?",
+      "expected_output": "a6d5e6c2-ca45-4163-b321-a5fee123bd93",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event dfb2dade-6773-4afa-995c-4c9934e11597?",
+      "expected_output": "dfb2dade-6773-4afa-995c-4c9934e11597",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event 03134b04-0a38-46ff-ba67-6ed8fc8b6da5 to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event 430da1b9-b69a-4c90-8a87-4699fc9fc120 to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event 8674d2f6-63ae-4043-9571-a3c217f0c412 to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event 50769909-110f-48ff-8eb1-9cfbf536fcb2 to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event 255980fa-5588-42da-b451-5e57f479970f to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "Search for recent cases involving T1078.004.",
+      "expected_output": "T1078.004",
+      "metadata": {
+        "expected_tool_calls": [
+          "search"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event be4187fa-df89-4aab-8b56-0291f449736c?",
+      "expected_output": "be4187fa-df89-4aab-8b56-0291f449736c",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event 9c6949d4-8200-4b88-bc31-fda8d1768281?",
+      "expected_output": "9c6949d4-8200-4b88-bc31-fda8d1768281",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "Search for recent cases involving T1059.005.",
+      "expected_output": "T1059.005",
+      "metadata": {
+        "expected_tool_calls": [
+          "search"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event eb6c8794-6e62-4338-ae9c-7e294668c4d8 to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event 19dc1c3c-042b-401b-b922-997c259ebfa9?",
+      "expected_output": "19dc1c3c-042b-401b-b922-997c259ebfa9",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event 334490a0-8bc9-4917-9e42-2144e2b0bff1?",
+      "expected_output": "334490a0-8bc9-4917-9e42-2144e2b0bff1",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event 0f0fc162-f5fb-4814-99ea-c81242ea1f36?",
+      "expected_output": "0f0fc162-f5fb-4814-99ea-c81242ea1f36",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event dd201e1a-0db7-4dc4-9c6b-db271e7902f1?",
+      "expected_output": "dd201e1a-0db7-4dc4-9c6b-db271e7902f1",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event 73232ba6-b392-4025-b35d-8e0ff2c804ed?",
+      "expected_output": "73232ba6-b392-4025-b35d-8e0ff2c804ed",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "Are there any incidents involving IP address 20.49.114.216?",
+      "expected_output": "20.49.114.216",
+      "metadata": {
+        "expected_tool_calls": [
+          "search"
+        ]
+      }
+    },
+    {
+      "question": "Search for recent cases involving T1204.002.",
+      "expected_output": "T1204.002",
+      "metadata": {
+        "expected_tool_calls": [
+          "search"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event 861cfd69-2d05-4597-b825-2364361a181a?",
+      "expected_output": "861cfd69-2d05-4597-b825-2364361a181a",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event a66d3fd7-f2e5-40db-8dc9-ea93aacc0dba?",
+      "expected_output": "a66d3fd7-f2e5-40db-8dc9-ea93aacc0dba",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event 3a8821ab-507a-4047-ba3f-3f474b560998?",
+      "expected_output": "3a8821ab-507a-4047-ba3f-3f474b560998",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event 0852a9d9-f0ba-4190-9280-901c2feef69b?",
+      "expected_output": "0852a9d9-f0ba-4190-9280-901c2feef69b",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "Are there any incidents involving IP address 79.223.54.77?",
+      "expected_output": "79.223.54.77",
+      "metadata": {
+        "expected_tool_calls": [
+          "search"
+        ]
+      }
+    },
+    {
+      "question": "Are there any incidents involving IP address 115.34.84.233?",
+      "expected_output": "115.34.84.233",
+      "metadata": {
+        "expected_tool_calls": [
+          "search"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event df5c7e65-edd6-4395-97fe-3679aacf19ed?",
+      "expected_output": "df5c7e65-edd6-4395-97fe-3679aacf19ed",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event e0dc5a64-22bf-4333-86d5-60f3e2099bad to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event 064d808e-f7f2-46e0-9c40-e8899d5deb5f to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "Are there any incidents involving IP address 149.195.60.54?",
+      "expected_output": "149.195.60.54",
+      "metadata": {
+        "expected_tool_calls": [
+          "search"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event f3956efd-26cf-412b-b84f-81460882d243 to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event 16b40995-c089-4d71-b11b-25f7c8d1d70c to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event a5103eac-614f-4a03-a61f-1fe03eb98f47?",
+      "expected_output": "a5103eac-614f-4a03-a61f-1fe03eb98f47",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event f932c637-df40-499d-aa88-7d0e892a303b to L2 due to suspicious activity.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "Search for recent cases involving T1547.001.",
+      "expected_output": "T1547.001",
+      "metadata": {
+        "expected_tool_calls": [
+          "search"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event cf390d80-68cf-4140-8564-3275256ace4e?",
+      "expected_output": "cf390d80-68cf-4140-8564-3275256ace4e",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "What are our top priorities?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Show me the summary of escalated cases",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Which cases are marked as emergency?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "What are our top priorities?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Show me the summary of escalated cases",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Which cases are marked as emergency?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "What are our top priorities?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Show me the summary of escalated cases",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Which cases are marked as emergency?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "What are our top priorities?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Show me the summary of escalated cases",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Which cases are marked as emergency?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "What are our top priorities?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Show me the summary of escalated cases",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Which cases are marked as emergency?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "What are our top priorities?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Show me the summary of escalated cases",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Which cases are marked as emergency?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "What are our top priorities?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Show me the summary of escalated cases",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Which cases are marked as emergency?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "What are our top priorities?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Show me the summary of escalated cases",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Which cases are marked as emergency?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "What are our top priorities?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Show me the summary of escalated cases",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Which cases are marked as emergency?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "What are our top priorities?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Show me the summary of escalated cases",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
+          "fetch_triage_data"
+        ]
+      }
+    },
+    {
+      "question": "Which cases are marked as emergency?",
+      "expected_output": "",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary",
           "fetch_triage_data"
         ]
       }
