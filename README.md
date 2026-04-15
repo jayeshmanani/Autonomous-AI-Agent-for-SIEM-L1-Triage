@@ -1,3 +1,12 @@
+---
+title: Autonomous SIEM L1 Triage
+emoji: 🛡️
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+---
+
 # Autonomous AI Agent for SIEM L1 Triage 🛡️
 
 **Live Demo**: [https://autonomous-ai-agent-for-siem-l1-triage.onrender.com](https://autonomous-ai-agent-for-siem-l1-triage.onrender.com)
