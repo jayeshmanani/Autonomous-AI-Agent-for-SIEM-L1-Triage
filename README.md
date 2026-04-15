@@ -65,9 +65,13 @@ uv sync
 To spin up the local FastAPI web server, execute:
 
 ```bash
+# Recommended: Run via Python directly to enable network accessibility (0.0.0.0 binding)
+uv run python -m app.main
+
+# Alternative: Hot-reload for local development
 uv run uvicorn app.main:app --reload
 ```
-Once running, you can connect your frontend interface or test the raw endpoints by navigating to `http://localhost:8000/docs` in your browser and SIEM L1 Agent Chat UI at `http://localhost:8000`.
+Once running, you can connect your frontend interface or test the raw endpoints by navigating to `http://localhost:8000/docs` in your browser and the SIEM L1 Agent Chat UI at `http://localhost:8000`. By default, the application is configured to bind to `0.0.0.0` making it suitable for direct container/cloud exposure out-of-the-box!
 
 ### 5. Running the AI Evaluation Pipeline
 Want to test how well the LLM classifies threats without executing false positives in production? Run the automated evaluation suite!
