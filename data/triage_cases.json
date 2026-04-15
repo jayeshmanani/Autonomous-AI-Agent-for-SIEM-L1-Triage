@@ -315,13 +315,36 @@
     "src_ip": "18.11.108.18",
     "dst_ip": "N/A",
     "abuse_score": 0,
-    "risk_score": 35.93,
-    "classification": "unknown",
+    "risk_score": 48.8,
+    "classification": "suspicious",
     "priority": "P3",
-    "tags": [],
-    "status": "new",
+    "tags": [
+      "classification:suspicious",
+      "event_type:ids_alert",
+      "mitre:T1218.011",
+      "risk:normal",
+      "severity:critical"
+    ],
+    "status": "escalated",
     "escalated": true,
-    "escalation_target": "L2-IR"
+    "escalation_target": "L2-IR",
+    "triage_summary": "IDS_ALERT event classified as suspicious with risk score 48.8/100 and priority P3.",
+    "triage_reasoning": [
+      "Classification is suspicious with priority P3 based on composite risk 48.8/100.",
+      "Severity input considered: critical.",
+      "Metadata contribution considered (risk_score=0.0, confidence=0.5).",
+      "Keyword signals found in log context: credential stuffing.",
+      "Decision used fields: event_type, severity, description, raw_log, src_ip, dst_ip."
+    ],
+    "decision_fields_used": [
+      "event_type",
+      "severity",
+      "description",
+      "raw_log",
+      "src_ip",
+      "dst_ip"
+    ],
+    "updated_at": "2026-04-14T16:50:10.526316+00:00"
   },
   {
     "event_id": "c753b66f-d1e7-419f-9e32-29db35525606",
@@ -495,13 +518,34 @@
     "src_ip": "68.14.74.108",
     "dst_ip": "10.251.11.159",
     "abuse_score": 0,
-    "risk_score": 100.0,
-    "classification": "unknown",
-    "priority": "P3",
-    "tags": [],
-    "status": "new",
-    "escalated": true,
-    "escalation_target": "L2-IR"
+    "risk_score": 21.6,
+    "classification": "authorized",
+    "priority": "P4",
+    "tags": [
+      "classification:authorized",
+      "event_type:firewall",
+      "risk:normal",
+      "severity:high"
+    ],
+    "status": "triaged",
+    "escalated": false,
+    "escalation_target": "L1-monitoring",
+    "triage_summary": "FIREWALL event classified as authorized with risk score 21.6/100 and priority P4.",
+    "triage_reasoning": [
+      "Classification is authorized with priority P4 based on composite risk 21.6/100.",
+      "Severity input considered: high.",
+      "Metadata contribution considered (risk_score=0.0, confidence=0.5).",
+      "Decision used fields: event_type, severity, description, raw_log, src_ip, dst_ip."
+    ],
+    "decision_fields_used": [
+      "event_type",
+      "severity",
+      "description",
+      "raw_log",
+      "src_ip",
+      "dst_ip"
+    ],
+    "updated_at": "2026-04-14T16:50:12.286550+00:00"
   },
   {
     "event_id": "f082978a-94d5-46df-bb2f-8472a09e8fce",
@@ -909,13 +953,34 @@
     "src_ip": "6.70.109.143",
     "dst_ip": "76.110.229.23",
     "abuse_score": 0,
-    "risk_score": 57.37,
-    "classification": "unknown",
-    "priority": "P3",
-    "tags": [],
-    "status": "new",
+    "risk_score": 12.6,
+    "classification": "authorized",
+    "priority": "P4",
+    "tags": [
+      "classification:authorized",
+      "event_type:firewall",
+      "risk:normal",
+      "severity:medium"
+    ],
+    "status": "triaged",
     "escalated": false,
-    "escalation_target": "L1-monitoring"
+    "escalation_target": "L1-monitoring",
+    "triage_summary": "FIREWALL event classified as authorized with risk score 12.6/100 and priority P4.",
+    "triage_reasoning": [
+      "Classification is authorized with priority P4 based on composite risk 12.6/100.",
+      "Severity input considered: medium.",
+      "Metadata contribution considered (risk_score=0.0, confidence=0.5).",
+      "Decision used fields: event_type, severity, description, raw_log, src_ip, dst_ip."
+    ],
+    "decision_fields_used": [
+      "event_type",
+      "severity",
+      "description",
+      "raw_log",
+      "src_ip",
+      "dst_ip"
+    ],
+    "updated_at": "2026-04-14T16:50:13.712984+00:00"
   },
   {
     "event_id": "6560bd79-6aa6-4862-832a-bd9f629cf084",
@@ -963,13 +1028,34 @@
     "src_ip": "87.175.17.114",
     "dst_ip": "117.16.103.75",
     "abuse_score": 0,
-    "risk_score": 70.47,
-    "classification": "unknown",
-    "priority": "P3",
-    "tags": [],
-    "status": "new",
+    "risk_score": 12.6,
+    "classification": "authorized",
+    "priority": "P4",
+    "tags": [
+      "classification:authorized",
+      "event_type:firewall",
+      "risk:normal",
+      "severity:medium"
+    ],
+    "status": "triaged",
     "escalated": false,
-    "escalation_target": "L1-monitoring"
+    "escalation_target": "L1-monitoring",
+    "triage_summary": "FIREWALL event classified as authorized with risk score 12.6/100 and priority P4.",
+    "triage_reasoning": [
+      "Classification is authorized with priority P4 based on composite risk 12.6/100.",
+      "Severity input considered: medium.",
+      "Metadata contribution considered (risk_score=0.0, confidence=0.5).",
+      "Decision used fields: event_type, severity, description, raw_log, src_ip, dst_ip."
+    ],
+    "decision_fields_used": [
+      "event_type",
+      "severity",
+      "description",
+      "raw_log",
+      "src_ip",
+      "dst_ip"
+    ],
+    "updated_at": "2026-04-14T16:50:27.990526+00:00"
   },
   {
     "event_id": "eb96793d-01a5-407a-bd6a-696a3b1b0693",
@@ -1017,13 +1103,33 @@
     "src_ip": "156.210.250.158",
     "dst_ip": null,
     "abuse_score": 0,
-    "risk_score": 69.77,
-    "classification": "unknown",
-    "priority": "P3",
-    "tags": [],
-    "status": "new",
+    "risk_score": 12.6,
+    "classification": "authorized",
+    "priority": "P4",
+    "tags": [
+      "classification:authorized",
+      "event_type:auth",
+      "risk:normal",
+      "severity:medium"
+    ],
+    "status": "triaged",
     "escalated": false,
-    "escalation_target": "L1-monitoring"
+    "escalation_target": "L1-monitoring",
+    "triage_summary": "AUTH event classified as authorized with risk score 12.6/100 and priority P4.",
+    "triage_reasoning": [
+      "Classification is authorized with priority P4 based on composite risk 12.6/100.",
+      "Severity input considered: medium.",
+      "Metadata contribution considered (risk_score=0.0, confidence=0.5).",
+      "Decision used fields: event_type, severity, description, raw_log, src_ip."
+    ],
+    "decision_fields_used": [
+      "event_type",
+      "severity",
+      "description",
+      "raw_log",
+      "src_ip"
+    ],
+    "updated_at": "2026-04-14T16:50:28.868954+00:00"
   },
   {
     "event_id": "c54a66b6-682a-496f-811c-1893cded38bc",
@@ -1143,13 +1249,35 @@
     "src_ip": "30.120.178.44",
     "dst_ip": "144.53.33.224",
     "abuse_score": 0,
-    "risk_score": 29.3,
-    "classification": "unknown",
+    "risk_score": 32.6,
+    "classification": "suspicious",
     "priority": "P3",
-    "tags": [],
-    "status": "new",
+    "tags": [
+      "classification:suspicious",
+      "event_type:ids_alert",
+      "risk:normal",
+      "severity:medium"
+    ],
+    "status": "triaged",
     "escalated": false,
-    "escalation_target": "L1-monitoring"
+    "escalation_target": "L1-monitoring",
+    "triage_summary": "IDS_ALERT event classified as suspicious with risk score 32.6/100 and priority P3.",
+    "triage_reasoning": [
+      "Classification is suspicious with priority P3 based on composite risk 32.6/100.",
+      "Severity input considered: medium.",
+      "Metadata contribution considered (risk_score=0.0, confidence=0.5).",
+      "Keyword signals found in log context: exploit, zero-day.",
+      "Decision used fields: event_type, severity, description, raw_log, src_ip, dst_ip."
+    ],
+    "decision_fields_used": [
+      "event_type",
+      "severity",
+      "description",
+      "raw_log",
+      "src_ip",
+      "dst_ip"
+    ],
+    "updated_at": "2026-04-14T16:50:29.791243+00:00"
   },
   {
     "event_id": "549d818c-feb2-4277-a51f-e120ee725419",
@@ -1647,13 +1775,33 @@
     "src_ip": "169.163.6.209",
     "dst_ip": null,
     "abuse_score": 0,
-    "risk_score": 59.09,
-    "classification": "unknown",
-    "priority": "P3",
-    "tags": [],
-    "status": "new",
+    "risk_score": 21.6,
+    "classification": "authorized",
+    "priority": "P4",
+    "tags": [
+      "classification:authorized",
+      "event_type:auth",
+      "risk:normal",
+      "severity:high"
+    ],
+    "status": "triaged",
     "escalated": false,
-    "escalation_target": "L1-monitoring"
+    "escalation_target": "L1-monitoring",
+    "triage_summary": "AUTH event classified as authorized with risk score 21.6/100 and priority P4.",
+    "triage_reasoning": [
+      "Classification is authorized with priority P4 based on composite risk 21.6/100.",
+      "Severity input considered: high.",
+      "Metadata contribution considered (risk_score=0.0, confidence=0.5).",
+      "Decision used fields: event_type, severity, description, raw_log, src_ip."
+    ],
+    "decision_fields_used": [
+      "event_type",
+      "severity",
+      "description",
+      "raw_log",
+      "src_ip"
+    ],
+    "updated_at": "2026-04-14T16:50:30.369793+00:00"
   },
   {
     "event_id": "ab0059d1-9b73-4689-9617-b97584a8b88a",
@@ -2025,13 +2173,34 @@
     "src_ip": "150.187.173.239",
     "dst_ip": "194.143.205.243",
     "abuse_score": 0,
-    "risk_score": 70.14,
-    "classification": "unknown",
-    "priority": "P3",
-    "tags": [],
-    "status": "new",
+    "risk_score": 5.4,
+    "classification": "authorized",
+    "priority": "P4",
+    "tags": [
+      "classification:authorized",
+      "event_type:network",
+      "risk:normal",
+      "severity:low"
+    ],
+    "status": "triaged",
     "escalated": false,
-    "escalation_target": "L1-monitoring"
+    "escalation_target": "L1-monitoring",
+    "triage_summary": "NETWORK event classified as authorized with risk score 5.4/100 and priority P4.",
+    "triage_reasoning": [
+      "Classification is authorized with priority P4 based on composite risk 5.4/100.",
+      "Severity input considered: low.",
+      "Metadata contribution considered (risk_score=0.0, confidence=0.5).",
+      "Decision used fields: event_type, severity, description, raw_log, src_ip, dst_ip."
+    ],
+    "decision_fields_used": [
+      "event_type",
+      "severity",
+      "description",
+      "raw_log",
+      "src_ip",
+      "dst_ip"
+    ],
+    "updated_at": "2026-04-14T16:50:31.104853+00:00"
   },
   {
     "event_id": "ed7e0515-0922-4ef4-a13a-0f218e265144",
@@ -2403,13 +2572,36 @@
     "src_ip": "193.133.128.184",
     "dst_ip": "101.25.10.50",
     "abuse_score": 0,
-    "risk_score": 49.05,
-    "classification": "unknown",
-    "priority": "P3",
-    "tags": [],
-    "status": "new",
+    "risk_score": 54.2,
+    "classification": "suspicious",
+    "priority": "P2",
+    "tags": [
+      "classification:suspicious",
+      "event_type:ids_alert",
+      "mitre:T1486",
+      "risk:elevated",
+      "severity:emergency"
+    ],
+    "status": "escalated",
     "escalated": true,
-    "escalation_target": "L2-IR"
+    "escalation_target": "L2-IR",
+    "triage_summary": "IDS_ALERT event classified as suspicious with risk score 54.2/100 and priority P2.",
+    "triage_reasoning": [
+      "Classification is suspicious with priority P2 based on composite risk 54.2/100.",
+      "Severity input considered: emergency.",
+      "Metadata contribution considered (risk_score=0.0, confidence=0.5).",
+      "Keyword signals found in log context: credential stuffing.",
+      "Decision used fields: event_type, severity, description, raw_log, src_ip, dst_ip."
+    ],
+    "decision_fields_used": [
+      "event_type",
+      "severity",
+      "description",
+      "raw_log",
+      "src_ip",
+      "dst_ip"
+    ],
+    "updated_at": "2026-04-14T16:50:31.793955+00:00"
   },
   {
     "event_id": "74044d00-211e-40cc-b227-ef80261d96af",
@@ -2475,13 +2667,33 @@
     "src_ip": null,
     "dst_ip": null,
     "abuse_score": 0,
-    "risk_score": 39.97,
-    "classification": "unknown",
-    "priority": "P3",
-    "tags": [],
-    "status": "new",
+    "risk_score": 1.8,
+    "classification": "authorized",
+    "priority": "P4",
+    "tags": [
+      "classification:authorized",
+      "event_type:ai",
+      "mitre:T1134.001",
+      "risk:normal",
+      "severity:info"
+    ],
+    "status": "triaged",
     "escalated": false,
-    "escalation_target": "L1-monitoring"
+    "escalation_target": "L1-monitoring",
+    "triage_summary": "AI event classified as authorized with risk score 1.8/100 and priority P4.",
+    "triage_reasoning": [
+      "Classification is authorized with priority P4 based on composite risk 1.8/100.",
+      "Severity input considered: info.",
+      "Metadata contribution considered (risk_score=0.0, confidence=0.5).",
+      "Decision used fields: event_type, severity, description, raw_log."
+    ],
+    "decision_fields_used": [
+      "event_type",
+      "severity",
+      "description",
+      "raw_log"
+    ],
+    "updated_at": "2026-04-14T16:50:32.803362+00:00"
   },
   {
     "event_id": "43dc93cc-f30c-4dca-bfc2-a48bfc51eb71",
