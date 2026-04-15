@@ -8,6 +8,13 @@ from typing import Any
 
 from dotenv import load_dotenv
 from pydantic_ai import Agent
+from langfuse import get_client
+
+load_dotenv()
+
+# Instrument all Pydantic AI agents for Langfuse
+langfuse = get_client()
+Agent.instrument_all()
 
 from app.models.assistant import AssistantResponse, EscalationAction
 from app.services.database import (
@@ -18,7 +25,10 @@ from app.services.database import (
     get_case_by_event_id,
     get_case_summary,
     search_cases,
+    filter_cases_by_origin,
+    triage_cases_by_origin,
 )
+from app.services.threat_intel import get_ip_reputation, get_vt_reputation
 
 load_dotenv()
 
@@ -299,6 +309,7 @@ ASSISTANT_TIMEOUT_SECONDS = float(os.getenv("ASSISTANT_TIMEOUT_SECONDS", "25"))
 siem_agent = Agent(
     MODEL_NAME,
     output_type=AssistantResponse,
+    instrument=True,
     tools=[
         fetch_triage_data,
         fetch_triage_summary,
@@ -306,6 +317,10 @@ siem_agent = Agent(
         classify_and_tag,
         escalate,
         search,
+        get_ip_reputation,
+        get_vt_reputation,
+        filter_cases_by_origin,
+        triage_cases_by_origin,
     ],
     system_prompt=(
         "You are an autonomous SOC L1 triage assistant. "
@@ -316,7 +331,11 @@ siem_agent = Agent(
         "3) Escalate when severity is critical/emergency, classification is malicious, or risk_score >= 80. "
         "4) Always populate the reasoning field with 2-5 concrete bullets tied to fields/metrics you used. "
         "5) In message, include a brief conclusion and next action. Keep responses concise and actionable. "
-        "6) Never fabricate evidence; if data is missing, explicitly say so in reasoning."
+        "6) Never fabricate evidence; if data is missing, explicitly say so in reasoning. "
+        "7) Use get_ip_reputation to fetch the AbuseIPDB confidence score for suspect IPs when reviewing cases. "
+        "8) Use get_vt_reputation to fetch the VirusTotal scan score for suspect domains, hashes, or URLs. "
+        "9) Use filter_cases_by_origin to find existing cases by their origin source (like network logs or firewalls). "
+        "10) Use triage_cases_by_origin to perform a bulk classification and triage pass on all new cases originating from a specific origin source."
     ),
 )
 

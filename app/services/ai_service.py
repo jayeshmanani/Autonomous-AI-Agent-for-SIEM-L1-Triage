@@ -97,6 +97,7 @@ def _build_triage_reasoning(
     classification: str,
     priority: str,
     abuse_score: int,
+    vt_score: int,
 ) -> list[str]:
     reasons: list[str] = []
     severity = _normalize_severity(event.get("severity"))
@@ -137,14 +138,16 @@ def _build_triage_reasoning(
         reasons.append(f"Keyword signals found in log context: {', '.join(sorted(set(keyword_hits)))}.")
 
     if abuse_score > 0:
-        reasons.append(f"Threat-intel abuse score considered: {abuse_score}.")
+        reasons.append(f"Threat-intel AbuseIPDB score considered: {abuse_score}.")
+    if vt_score > 0:
+        reasons.append(f"Threat-intel VirusTotal score considered: {vt_score}.")
 
     used_fields = _collect_fields_used(event)
     reasons.append(f"Decision used fields: {', '.join(used_fields)}.")
     return reasons
 
 
-def _calculate_risk_score(event: dict[str, Any], abuse_score: int) -> float:
+def _calculate_risk_score(event: dict[str, Any], abuse_score: int, vt_score: int) -> float:
     severity = _normalize_severity(event.get("severity"))
     base = float(SEVERITY_WEIGHT[severity])
 
@@ -176,7 +179,7 @@ def _calculate_risk_score(event: dict[str, Any], abuse_score: int) -> float:
         keyword_bonus += 10.0
     keyword_bonus += min(10.0, _safe_float(behavior.get("baseline_deviation"), 0.0) * 2.0)
 
-    weighted_risk = (0.4 * base) + (0.35 * risk_score) + (0.25 * abuse_score)
+    weighted_risk = (0.35 * base) + (0.25 * risk_score) + (0.2 * abuse_score) + (0.2 * vt_score)
     blended = weighted_risk * (0.8 + (0.2 * confidence)) + keyword_bonus
     return max(0.0, min(100.0, blended))
 
@@ -191,7 +194,7 @@ def _classify(score: float) -> tuple[str, str, str]:
     return "authorized", "low", "P4"
 
 
-def _build_tags(event: dict[str, Any], classification: str, risk_score: float, abuse_score: int) -> list[str]:
+def _build_tags(event: dict[str, Any], classification: str, risk_score: float, abuse_score: int, vt_score: int) -> list[str]:
     tags: set[str] = {f"classification:{classification}", f"event_type:{str(event.get('event_type', 'unknown')).lower()}"}
     severity = _normalize_severity(event.get("severity"))
     tags.add(f"severity:{severity}")
@@ -205,6 +208,8 @@ def _build_tags(event: dict[str, Any], classification: str, risk_score: float, a
 
     if abuse_score >= 70:
         tags.add("threat-intel:bad-ip")
+    if vt_score >= 50:
+        tags.add("threat-intel:vt-malicious")
 
     text_blob = " ".join(
         [
@@ -219,13 +224,13 @@ def _build_tags(event: dict[str, Any], classification: str, risk_score: float, a
     return sorted(tags)
 
 
-def analyze_event(event: dict[str, Any], abuse_score: int = 0) -> dict[str, Any]:
+def analyze_event(event: dict[str, Any], abuse_score: int = 0, vt_score: int = 0) -> dict[str, Any]:
     """Run autonomous L1 triage and escalation decisioning for one event."""
-    risk_score = round(_calculate_risk_score(event, abuse_score), 2)
+    risk_score = round(_calculate_risk_score(event, abuse_score, vt_score), 2)
     classification, confidence_band, priority = _classify(risk_score)
-    tags = _build_tags(event, classification, risk_score, abuse_score)
+    tags = _build_tags(event, classification, risk_score, abuse_score, vt_score)
     used_fields = _collect_fields_used(event)
-    triage_reasoning = _build_triage_reasoning(event, risk_score, classification, priority, abuse_score)
+    triage_reasoning = _build_triage_reasoning(event, risk_score, classification, priority, abuse_score, vt_score)
 
     escalation_required = (
         classification == "malicious"
@@ -237,7 +242,9 @@ def analyze_event(event: dict[str, Any], abuse_score: int = 0) -> dict[str, Any]
     if classification == "malicious":
         reasons.append("Model classified event as malicious.")
     if abuse_score >= 70:
-        reasons.append("External threat-intel score is high.")
+        reasons.append("External AbuseIPDB threat-intel score is high.")
+    if vt_score >= 50:
+        reasons.append("VirusTotal flagged indicators as highly suspicious/malicious.")
     if risk_score >= 80:
         reasons.append("Composite risk score crossed escalation threshold.")
     if _normalize_severity(event.get("severity")) in {"critical", "emergency"}:
