@@ -25,6 +25,11 @@ def reset_database() -> None:
         shutil.copy(SEED_FILE, DB_FILE)
 
 
+from filelock import FileLock
+import threading
+
+_db_lock = FileLock(f"{DB_FILE}.lock")
+
 def _load_db() -> list[dict[str, Any]]:
     if not DB_FILE.exists():
         reset_database()
@@ -37,11 +42,6 @@ def _load_db() -> list[dict[str, Any]]:
         return payload
     return []
 
-
-from filelock import FileLock
-import threading
-
-_db_lock = FileLock(f"{DB_FILE}.lock")
 
 def _save_db(cases: list[dict[str, Any]]) -> None:
     with _db_lock:
