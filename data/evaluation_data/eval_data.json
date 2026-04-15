@@ -1,0 +1,49 @@
+{
+  "items": [
+    {
+      "question": "Can you provide a summary of the current triage cases?",
+      "expected_output": "Current case overview",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_summary"
+        ]
+      }
+    },
+    {
+      "question": "What is the status of event 3bd22c92-db2e-4769-a462-b64e197265b9?",
+      "expected_output": "3bd22c92-db2e-4769-a462-b64e197265b9",
+      "metadata": {
+        "expected_tool_calls": [
+          "lookup_case"
+        ]
+      }
+    },
+    {
+      "question": "Are there any cases involving MITRE Technique T1486?",
+      "expected_output": "T1486",
+      "metadata": {
+        "expected_tool_calls": [
+          "search"
+        ]
+      }
+    },
+    {
+      "question": "Please escalate event 52da3d0f-3490-41bc-bf93-57da08b8e47c because of fileless execution.",
+      "expected_output": "escalated successfully",
+      "metadata": {
+        "expected_tool_calls": [
+          "escalate"
+        ]
+      }
+    },
+    {
+      "question": "What cases should I prioritize right now?",
+      "expected_output": "Priority right now",
+      "metadata": {
+        "expected_tool_calls": [
+          "fetch_triage_data"
+        ]
+      }
+    }
+  ]
+}
