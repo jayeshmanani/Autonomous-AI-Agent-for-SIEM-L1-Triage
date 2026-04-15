@@ -1,259 +1,98 @@
-# Autonomous-AI-Agent-for-SIEM-L1-Triage
-Autonomous AI agent for SIEM L1 triage. Analyzes and prioritizes alerts, enriches them with context, and performs initial investigation steps to speed up response and reduce analyst workload, enabling teams to focus on advanced threat analysis.
+# Autonomous AI Agent for SIEM L1 Triage 🛡️
 
+**Welcome to the future of Security Operations.** 
+The SIEM L1 Triage Agent is an autonomous, context-aware AI assistant designed to systematically eliminate alert fatigue. By natively integrating with your JSON-backed case database and external Threat Intelligence platforms (VirusTotal, AbuseIPDB), this agent autonomously investigates, scores, tags, and escalates security events - acting as a true L1 companion for your SOC analysts.
 
-# About the Dataset used for AI Agent
-# Advanced SIEM Dataset (https://huggingface.co/datasets/darkknight25/Advanced_SIEM_Dataset)
+---
 
-## Dataset Description
+## 🌟 Key Product Features
 
-The advanced_siem_dataset is a synthetic dataset of 100,000 security event records designed for training machine learning (ML) and artificial intelligence (AI) models in cybersecurity.
+- **Automated Alert Triage**: The agent autonomously parses unstructured logs, calculates deterministic risk scores (0-100), and classifies events (`malicious`, `suspicious`, `authorized`).
+- **Dynamic Threat Intelligence (New!)**: Natively connects to external APIs. Automatically extracts URLs, IPs, and file hashes from logs and cross-references them against **VirusTotal** and **AbuseIPDB** to dynamically inflate risk scoring on positive hits.
+- **Conversational Chatbot Interface**: Built on FastAPI, the web interface allows SOC analysts to interface conversationally with the underlying data. Ask queries like: *"Show me all critical escalated cases"* or *"Can you scan this IP via VirusTotal?"*
+- **Bulk Origin Filtering & Triage**: Safely segregate SIEM logic! Analysts can filter a massive database by `origin` strings or command the agent to bulk-triage missing events in parallel.
+- **Data-Driven Evaluation Pipeline**: Fully instrumented with **Langfuse**. Generate real-world evaluations systematically to perfectly monitor your AI's reasoning accuracy across different edge cases.
 
-It simulates logs from Security Information and Event Management (SIEM) systems, capturing diverse event types such as firewall activities, intrusion detection system (IDS) alerts, authentication attempts, endpoint activities, network traffic, cloud operations, IoT device events, and AI system interactions.
+---
 
-The dataset includes advanced metadata, MITRE ATT&CK techniques, threat actor associations, and unconventional indicators of compromise (IOCs), making it suitable for tasks like anomaly detection, threat classification, predictive analytics, and user and entity behavior analytics (UEBA).
+## 🛠️ Architecture & Tech Stack
 
-## Dataset Structure
+- **Core AI Engine**: Google Vertex AI / Gemini (`pydantic-ai`)
+- **Backend API**: FastAPI / Python 3.13 
+- **Database**: Local high-speed JSON datastore with thread-safe atomic locking (`filelock`)
+- **Telemetry & Evals**: Langfuse SDK v3
 
-The dataset is stored in a single train split in JSON Lines format, with each record representing a security event. Below is the schema:
-```
-Field
-Type
-Description
+---
 
-event_id
-String
-Unique identifier (UUID) for the event.
+## 🚀 Getting Started
 
-timestamp
-String
-ISO 8601 timestamp of the event.
-
-event_type
-String
-Event category: firewall, ids_alert, auth, endpoint, network, cloud, iot, ai.
-
-source
-String
-Security tool and version (e.g., "Splunk v9.0.2").
-
-severity
-String
-Severity level: info, low, medium, high, critical, emergency.
-
-description
-String
-Human-readable summary of the event.
-
-raw_log
-String
-CEF-formatted raw log with optional noise.
-
-advanced_metadata
-Dict
-Metadata including geo_location, device_hash, user_agent, session_id, risk_score, confidence.
-
-behavioral_analytics
-Dict
-Optional; includes baseline_deviation, entropy, frequency_anomaly, sequence_anomaly (10% of records).
-
-Event-specific fields
-Varies
-E.g., src_ip, dst_ip, alert_type (for ids_alert), user (for auth), action, etc.
-```
-
-## Sample Record:
-```
-{
-  "event_id": "123e4567-e89b-12d3-a456-426614174000",
-  "timestamp": "2025-07-11T11:27:00+00:00",
-  "event_type": "ids_alert",
-  "source": "Snort v2.9.20",
-  "severity": "high",
-  "description": "Snort Alert: Zero-Day Exploit detected from 192.168.1.100 targeting N/A | MITRE Technique: T1059.001",
-  "raw_log": "CEF:0|Snort v2.9.20|SIEM|1.0|100|ids_alert|high| desc=Snort Alert: Zero-Day Exploit detected from 192.168.1.100 targeting N/A | MITRE Technique: T1059.001",
-  "advanced_metadata": {
-    "geo_location": "United States",
-    "device_hash": "a1b2c3d4e5f6",
-    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/91.0.4472.124",
-    "session_id": "987fcdeb-1234-5678-abcd-426614174000",
-    "risk_score": 85.5,
-    "confidence": 0.95
-  },
-  "alert_type": "Zero-Day Exploit",
-  "signature_id": "SIG-1234",
-  "category": "Exploit",
-  "additional_info": "MITRE Technique: T1059.001"
-}
-```
-
-## Intended Use
-
-This dataset is intended for:
-Anomaly Detection: Identify unusual patterns (e.g., zero-day exploits, beaconing) using unsupervised learning.
-Threat Classification: Classify events by severity or event_type for incident prioritization.
-User and Entity Behavior Analytics (UEBA): Detect insider threats or compromised credentials by analyzing auth or endpoint events.
-Predictive Analytics: Forecast high-risk periods using time-series analysis of risk_score and timestamp.
-Threat Hunting: Leverage MITRE ATT&CK techniques and IOCs in additional_info for threat intelligence.
-Red Teaming: Simulate adversarial scenarios (e.g., APTs, DNS tunneling) for testing SIEM systems.
-
-## Limitations:
-Synthetic Nature: The dataset is synthetic and may not fully capture real-world SIEM log complexities, such as vendor-specific formats or noise patterns.
-Class Imbalance: Certain event_type (e.g., ai, iot) or severity (e.g., emergency) values may be underrepresented. Use data augmentation or reweighting for balanced training.
-Missing Values: Some dst_ip fields in ids_alert events are "N/A", requiring imputation or filtering.
-Timestamp Anomalies: 5% of records include intentional timestamp anomalies (future/past dates) to simulate time-based attacks, which may require special handling.
-
-## Working Autonomous L1 Triage Agent
-
-This repository now includes a working FastAPI-based L1 triage agent with:
-
-- Log/event classification (`authorized`, `suspicious`, `malicious`)
-- Risk scoring with SIEM severity + metadata + optional AbuseIPDB enrichment
-- Automatic escalation recommendation to `L2-IR` when thresholds are met
-- Event tagging (classification, severity, event type, MITRE techniques)
-- Chatbot endpoint to ask questions about the loaded dataset and triage history
-
-## Project Structure
-
-```
-app/
-  main.py                  # FastAPI API endpoints
-  services/
-    ai_service.py          # Triage scoring, classification, tags, chatbot logic
-    threat_intel.py        # AbuseIPDB IP reputation lookup
-  utils/
-    log_parser.py          # CEF parsing, IP extraction, dataset loading
-data/
-  sample_logs.json
-```
-
-## Environment Variables
-
-Configure in `.env`:
-
-- `ABUSEIPDB_API_KEY` (optional but recommended for external IP reputation)
-- `SIEM_DATASET_PATH` (optional, defaults to `data/sample_logs.json`)
-- `MAX_DATASET_RECORDS` (optional, defaults to `25000`)
-- `MAX_BATCH_SIZE` (optional, defaults to `200`)
-
-## Run the API
+### 1. Prerequisites
+Ensure you have Python 3.13 installed alongside `uv` (our lightning-quick package manager).
 
 ```bash
+# Install uv if you don't have it
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+### 2. Environment Variables (`.env`)
+You must configure your API keys locally before running the agent. Create a `.env` file in the root of the project:
+
+```env
+# AI Model Configuration
+GEMINI_API_KEY=your_gemini_api_key_here
+PydanticAI_MODEL=vertexai:gemini-2.5-flash
+ASSISTANT_TIMEOUT_SECONDS=25
+
+# Threat Intelligence Context APIs
+ABUSEIPDB_API_KEY=your_abuseipdb_api_key_here
+VIRUSTOTAL_API_KEY=your_virustotal_api_key_here
+
+# Langfuse Evaluation & Telemetry
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_HOST=https://cloud.langfuse.com
+```
+
+### 3. Installation
+Using `uv`, you can instantly sync the project dependencies without worrying about stale virtual environments.
+
+```bash
+# Sync dependencies
 uv sync
+```
+
+### 4. Running the Local API & Interface
+To spin up the local FastAPI web server, execute:
+
+```bash
 uv run uvicorn app.main:app --reload
 ```
+Once running, you can connect your frontend interface or test the raw endpoints by navigating to `http://localhost:8000/docs` in your browser and SIEM L1 Agent Chat UI at `http://localhost:8000`.
 
-Open docs at:
+### 5. Running the AI Evaluation Pipeline
+Want to test how well the LLM classifies threats without executing false positives in production? Run the automated evaluation suite!
 
-- `http://127.0.0.1:8000/docs`
-
-## Endpoints
-
-- `GET /health`
-  - Returns service status, loaded dataset size, and triage history size.
-
-- `POST /triage`
-  - Triage one event or raw log.
-  - Body:
-
-```json
-{
-  "event": {
-    "event_type": "ids_alert",
-    "severity": "high",
-    "description": "Credential stuffing detected from 54.159.34.148",
-    "raw_log": "CEF:0|Snort|SIEM|1.0|100|ids_alert|high| desc=Credential Stuffing detected from 54.159.34.148",
-    "src_ip": "54.159.34.148",
-    "advanced_metadata": {"risk_score": 72.5, "confidence": 0.91}
-  },
-  "enrich_threat_intel": true
-}
+```bash
+uv run python -m scripts.run_evaluation_pipeline
 ```
 
-- `POST /triage/batch`
-  - Triage multiple events in one request.
+---
 
-- `POST /tag`
-  - Returns tags, classification, and priority for an event.
+## 🧠 Chatbot Interaction Examples
 
-- `GET /analysis/summary`
-  - Returns dataset-level analytics (severity breakdown, event type distribution, top sources).
+Connect to the `/assistant/ask` endpoint and prompt the agent naturally!
 
-- `POST /chat`
-  - Ask questions like:
-    - "Give dataset summary"
-    - "How many critical events?"
-    - "Show event type distribution"
-    - "How many escalations do we have?"
+> **Analyst**: *"What are my top priorities right now?"*  
+> **Agent**: *"You have 4 new and unclassified cases. Your top priority should be to triage these new alerts to determine their classification and severity.
+Reasoning: 4 cases are currently in "new" status and All 4 cases have an "unknown" classification."*
 
-## Notes
+> **Analyst**: *"Can you scan 206.168.34.44?"*  
+> **Agent**: *"The IP address 206.168.34.44 has a highly malicious reputation score of 100. This indicates a high likelihood of malicious activity.
+Reasoning: AbuseIPDB confidence score for 206.168.34.44 is 100, indicating confirmed malicious activity."*
 
-- The loader is resilient to large and non-strict JSON dataset formatting.
-- Threat-intel lookup is cached to reduce repeated API calls for the same IP.
-- If no AbuseIPDB key is set, triage still works using internal scoring rules.
+> **Analyst**: *"206.168.34.44 scan in virustotal"*  
+> **Agent**: *"VirusTotal scan for 206.168.34.44 shows a malicious score of 11. This indicates some reported malicious activity by various security vendors.
+Reasoning: VirusTotal aggregated malicious score for 206.168.34.44 is 11."*
 
-## Live SIEM Assistant (PydanticAI)
 
-The project now includes a structured, session-aware assistant integrated with the SIEM triage database.
-
-New modules:
-
-- `app/models/assistant.py` for structured assistant output schema.
-- `app/services/database.py` for JSON-backed triage case persistence and updates.
-- `app/services/agent.py` for PydanticAI agent setup, tools, and fallback behavior.
-- `app/routers/assistant.py` for assistant chat routes.
-
-New data files generated under `data/`:
-
-- `initial_triage_cases.json` (seed snapshot)
-- `triage_cases.json` (working DB, generated automatically at runtime if missing)
-
-Assistant endpoints:
-
-- `GET /assistant/welcome/{session_id}`
-- `POST /assistant/ask`
-
-Sample ask payload:
-
-```json
-{
-  "session_id": "soc-user-1",
-  "prompt": "Classify high-risk events and escalate critical ones"
-}
-```
-
-Additional optional env vars:
-
-- `PydanticAI_MODEL` (default: `vertexai:gemini-2.5-flash`)
-- `ASSISTANT_TIMEOUT_SECONDS` (default: `25`)
-
-Notes on first-run data behavior:
-
-- Keep `data/initial_triage_cases.json` and `data/sample_logs.json` in the repository.
-- `data/triage_cases.json` is runtime state and is auto-created from `initial_triage_cases.json` on first use.
-- `data/triage_cases.json` is git-ignored so local triage mutations are not committed by default.
-
-## Web UI (Chat + Actions)
-
-The app now includes a browser-based SOC console so you can talk to the agent and run triage tasks without manually calling APIs.
-
-How to use:
-
-1. Start the server:
-  - `uv run uvicorn app.main:app --reload`
-2. Open:
-  - `http://127.0.0.1:8000/`
-
-What you can do in the UI:
-
-- Chat with the assistant in a live session.
-- Ask data-analysis questions and escalation questions.
-- Run origin-based triage (for event types, source names, or IP fragments).
-- Paste one raw log and get immediate triage output.
-
-UI-related routes:
-
-- `GET /` (web console)
-- `GET /static/*` (UI assets)
-- `POST /triage/by-origin/{origin}` (bulk triage by origin filter)
 
