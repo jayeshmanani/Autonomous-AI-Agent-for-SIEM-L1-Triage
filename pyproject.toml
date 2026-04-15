@@ -8,6 +8,7 @@ dependencies = [
     "fastapi>=0.135.3",
     "google-cloud-aiplatform>=1.147.0",
     "langfuse>=4.0.6",
+    "loguru>=0.7.3",
     "opentelemetry-exporter-otlp>=1.40.0",
     "opentelemetry-sdk>=1.40.0",
     "pydantic-ai>=0.8.1",

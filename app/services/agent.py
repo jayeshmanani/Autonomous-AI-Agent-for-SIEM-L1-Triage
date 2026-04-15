@@ -8,6 +8,13 @@ from typing import Any
 
 from dotenv import load_dotenv
 from pydantic_ai import Agent
+from langfuse import get_client
+
+load_dotenv()
+
+# Instrument all Pydantic AI agents for Langfuse
+langfuse = get_client()
+Agent.instrument_all()
 
 from app.models.assistant import AssistantResponse, EscalationAction
 from app.services.database import (
@@ -299,6 +306,7 @@ ASSISTANT_TIMEOUT_SECONDS = float(os.getenv("ASSISTANT_TIMEOUT_SECONDS", "25"))
 siem_agent = Agent(
     MODEL_NAME,
     output_type=AssistantResponse,
+    instrument=True,
     tools=[
         fetch_triage_data,
         fetch_triage_summary,
