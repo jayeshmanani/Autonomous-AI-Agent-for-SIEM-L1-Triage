@@ -1,21 +1,17 @@
 import json
 import random
 
-# Read sample logs
-logs = []
-with open("data/sample_logs.json", "r", encoding="utf-8") as f:
-    for line in f:
-        line = line.strip()
-        if not line: continue
-        try:
-            logs.append(json.loads(line))
-        except:
-            pass
+# Read actual core DB cases
+try:
+    with open("data/initial_triage_cases.json", "r", encoding="utf-8") as f:
+        cases = json.load(f)
+except Exception as e:
+    print(f"Failed to load DB cases: {e}")
+    cases = []
 
-# Generate eval items
 items = []
 
-# Add some general summary queries
+# Global scope questions
 items.append({
     "question": "Can you provide a summary of the current triage cases?",
     "expected_output": "Current case overview",
@@ -26,60 +22,73 @@ items.append({
     "expected_output": "Priority right now",
     "metadata": {"expected_tool_calls": ["fetch_triage_data"]}
 })
+items.append({
+    "question": "Give me a list of all escalated cases.",
+    "expected_output": "escalated",
+    "metadata": {"expected_tool_calls": ["fetch_triage_data"]}
+})
 
-# Generate specific lookup and escalate queries
-sampled_logs = random.sample(logs, min(80, len(logs)))
-for log in sampled_logs:
-    action_type = random.choice(["lookup", "escalate", "search_ip", "search_technique"])
+# Generate specific questions from the actual database cases
+sampled_cases = random.sample(cases, min(90, len(cases)))
+
+for case in sampled_cases:
+    tools_pool = ["lookup_case", "escalate", "classify_and_tag", "search_type", "search_class", "search_str"]
+    action_type = random.choice(tools_pool)
     
-    event_id = log.get("event_id")
-    src_ip = log.get("src_ip")
-    mitre = None
-    if "additional_info" in log and "MITRE Technique:" in log["additional_info"]:
-        mitre = log["additional_info"].split("MITRE Technique:")[1].strip().split()[0]
+    event_id = case.get("event_id", "")
+    event_type = case.get("event_type", "")
+    classification = case.get("classification", "")
+    additional_info = case.get("additional_info", "")
     
-    if action_type == "lookup":
+    if action_type == "lookup_case":
         items.append({
-            "question": f"What is the status of event {event_id}?",
+            "question": f"What is the current status and details of event {event_id}?",
             "expected_output": event_id,
             "metadata": {"expected_tool_calls": ["lookup_case"]}
         })
     elif action_type == "escalate":
         items.append({
-            "question": f"Please escalate event {event_id} to L2 due to suspicious activity.",
+            "question": f"Review event {event_id} and please escalate it immediately.",
             "expected_output": "escalated successfully",
             "metadata": {"expected_tool_calls": ["escalate"]}
         })
-    elif action_type == "search_ip" and src_ip:
+    elif action_type == "classify_and_tag":
         items.append({
-            "question": f"Are there any incidents involving IP address {src_ip}?",
-            "expected_output": src_ip,
+            "question": f"Classify case {event_id} as false_positive and tag it with 'ignore'.",
+            "expected_output": "classified successfully",
+            "metadata": {"expected_tool_calls": ["classify_and_tag"]}
+        })
+    elif action_type == "search_type" and event_type:
+        items.append({
+            "question": f"Find all cases related to the event type: {event_type}.",
+            "expected_output": event_type,
             "metadata": {"expected_tool_calls": ["search"]}
         })
-    elif action_type == "search_technique" and mitre:
+    elif action_type == "search_class" and classification:
         items.append({
-            "question": f"Search for recent cases involving {mitre}.",
+            "question": f"Are there any incidents flagged with the classification '{classification}'?",
+            "expected_output": classification,
+            "metadata": {"expected_tool_calls": ["search"]}
+        })
+    elif action_type == "search_str" and additional_info and "MITRE Technique:" in additional_info:
+        mitre = additional_info.split("MITRE Technique:")[1].strip().split()[0]
+        items.append({
+            "question": f"Search for any recent cases involving technique {mitre}.",
             "expected_output": mitre,
             "metadata": {"expected_tool_calls": ["search"]}
         })
 
-# Pad the remaining to reach roughly 100, if not already.
-additional_questions = [
-    "What are our top priorities?",
-    "Show me the summary of escalated cases",
-    "Which cases are marked as emergency?"
-] * 10
-
-for q in additional_questions[:100 - len(items)]:
+# Pad out remaining
+for q in ["What are our top emergency priorities?", "Summary of all new events", "Which case has the highest risk score"]:
     items.append({
         "question": q,
         "expected_output": "",
         "metadata": {"expected_tool_calls": ["fetch_triage_summary", "fetch_triage_data"]}
     })
 
-# Write to eval_data.json
+# Write out the JSON for eval
 final_data = {"items": items}
 with open("data/evaluation_data/eval_data.json", "w", encoding="utf-8") as f:
     json.dump(final_data, f, indent=2)
 
-print(f"Generated {len(items)} eval items.")
+print(f"Generated {len(items)} items grounded in initial_triage_cases.json.")

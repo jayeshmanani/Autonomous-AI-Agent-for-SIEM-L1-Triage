@@ -26,7 +26,16 @@ def extract_tool_calls(messages) -> list[str]:
 # Initialize langfuse client (depends on environment variables LANGFUSE_SECRET_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_HOST)
 langfuse = Langfuse()
 
-DATASET_NAME = "siem_triage_eval"
+import hashlib
+
+def get_dataset_name():
+    eval_file = DATA_DIR / "evaluation_data" / "eval_data.json"
+    if eval_file.exists():
+        content_hash = hashlib.md5(eval_file.read_bytes()).hexdigest()[:8]
+        return f"siem_triage_eval_{content_hash}"
+    return "siem_triage_eval"
+
+DATASET_NAME = get_dataset_name()
 
 # Fallback evaluation dataset if file doesn't exist
 DEFAULT_EVAL_DATA = [
