@@ -26,6 +26,7 @@ from app.services.database import (
     get_case_summary,
     search_cases,
 )
+from app.services.threat_intel import get_ip_reputation
 
 load_dotenv()
 
@@ -314,6 +315,7 @@ siem_agent = Agent(
         classify_and_tag,
         escalate,
         search,
+        get_ip_reputation,
     ],
     system_prompt=(
         "You are an autonomous SOC L1 triage assistant. "
@@ -324,7 +326,8 @@ siem_agent = Agent(
         "3) Escalate when severity is critical/emergency, classification is malicious, or risk_score >= 80. "
         "4) Always populate the reasoning field with 2-5 concrete bullets tied to fields/metrics you used. "
         "5) In message, include a brief conclusion and next action. Keep responses concise and actionable. "
-        "6) Never fabricate evidence; if data is missing, explicitly say so in reasoning."
+        "6) Never fabricate evidence; if data is missing, explicitly say so in reasoning. "
+        "7) Use get_ip_reputation to fetch the AbuseIPDB confidence score for suspect IPs when reviewing cases."
     ),
 )
 
