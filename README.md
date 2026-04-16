@@ -1,6 +1,6 @@
 # Autonomous AI Agent for SIEM L1 Triage 🛡️
 
-**Live Demo**: [https://autonomous-ai-agent-for-siem-l1-triage.onrender.com](https://autonomous-ai-agent-for-siem-l1-triage.onrender.com)
+## 🚀 Live Demo: [https://autonomous-ai-agent-for-siem-l1-triage.onrender.com](https://autonomous-ai-agent-for-siem-l1-triage.onrender.com) 🚀
 
 **Welcome to the future of Security Operations.** 
 The SIEM L1 Triage Agent is an autonomous, context-aware AI assistant designed to systematically eliminate alert fatigue. By natively integrating with your JSON-backed case database and external Threat Intelligence platforms (VirusTotal, AbuseIPDB), this agent autonomously investigates, scores, tags, and escalates security events - acting as a true L1 companion for your SOC analysts.
@@ -99,6 +99,3 @@ Reasoning: AbuseIPDB confidence score for 206.168.34.44 is 100, indicating confi
 > **Analyst**: *"206.168.34.44 scan in virustotal"*  
 > **Agent**: *"VirusTotal scan for 206.168.34.44 shows a malicious score of 11. This indicates some reported malicious activity by various security vendors.
 Reasoning: VirusTotal aggregated malicious score for 206.168.34.44 is 11."*
-
-
-
